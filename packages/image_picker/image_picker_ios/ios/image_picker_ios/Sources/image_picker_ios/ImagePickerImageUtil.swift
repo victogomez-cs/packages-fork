@@ -131,9 +131,11 @@ enum ImagePickerImageUtil {
       }
 
       var image = UIImage(cgImage: imageRef, scale: 1.0, orientation: .up)
-      image =
-        scaledImage(
-          image, maxWidth: maxWidth, maxHeight: maxHeight, isMetadataAvailable: true) ?? image
+      // Force-unwrap to mirror Obj-C: scaledImage nil was passed to
+      // -[NSMutableArray addObject:], which crashes rather than keeping the
+      // unscaled frame.
+      image = scaledImage(
+        image, maxWidth: maxWidth, maxHeight: maxHeight, isMetadataAvailable: true)!
 
       images.append(image)
     }

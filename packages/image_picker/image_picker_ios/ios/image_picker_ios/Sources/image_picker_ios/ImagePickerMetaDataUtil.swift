@@ -99,13 +99,17 @@ enum ImagePickerMetaDataUtil {
     switch type {
     case .jpeg:
       let qualityFloat: CGFloat = quality != nil ? CGFloat(truncating: quality!) : 1
-      return image.jpegData(compressionQuality: qualityFloat) ?? Data()
+      // Force-unwrap to mirror Obj-C UIImageJPEGRepresentation: encoding failure
+      // surfaces as a crash rather than silently writing empty Data.
+      return image.jpegData(compressionQuality: qualityFloat)!
     case .png:
-      return image.pngData() ?? Data()
+      // Force-unwrap to mirror Obj-C UIImagePNGRepresentation (see JPEG case).
+      return image.pngData()!
     default:
       // converts to JPEG by default.
       let qualityFloat: CGFloat = quality != nil ? CGFloat(truncating: quality!) : 1
-      return image.jpegData(compressionQuality: qualityFloat) ?? Data()
+      // Force-unwrap to mirror Obj-C UIImageJPEGRepresentation (see JPEG case).
+      return image.jpegData(compressionQuality: qualityFloat)!
     }
   }
 }

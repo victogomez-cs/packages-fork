@@ -1,3 +1,7 @@
+## 6.3.1
+
+* Migrates the platform implementation from Objective-C to Swift.
+
 ## 6.3.0
 
 * Adds UIScene compatibility.

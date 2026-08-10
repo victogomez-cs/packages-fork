@@ -169,7 +169,8 @@ public final class GoogleSignInPlugin: NSObject, FlutterPlugin, GoogleSignInApi 
       return signIn.handle(url)
     }
   #else
-    public func handleOpenURLs(_ urls: [URL]) -> Bool {
+    // Obj-C selector is handleOpenURLs:; Swift imports it as handleOpen(_:).
+    public func handleOpen(_ urls: [URL]) -> Bool {
       var handled = false
       for url in urls {
         handled = signIn.handle(url) || handled

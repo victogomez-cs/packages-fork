@@ -21,17 +21,21 @@ let package = Package(
       from: "9.0.0")
   ],
   targets: [
+    // Tiny Obj-C helper so Swift can catch NSExceptions raised by the Google Sign-In SDK
+    // (and by unit-test fakes). SPM does not allow mixing Swift and Obj-C in one target.
+    .target(
+      name: "google_sign_in_ios_objc",
+      publicHeadersPath: "include"
+    ),
     .target(
       name: "google_sign_in_ios",
       dependencies: [
-        .product(name: "GoogleSignIn", package: "GoogleSignIn-iOS")
+        .product(name: "GoogleSignIn", package: "GoogleSignIn-iOS"),
+        "google_sign_in_ios_objc",
       ],
       resources: [
         .process("Resources")
-      ],
-      cSettings: [
-        .headerSearchPath("include/google_sign_in_ios")
       ]
-    )
+    ),
   ]
 )

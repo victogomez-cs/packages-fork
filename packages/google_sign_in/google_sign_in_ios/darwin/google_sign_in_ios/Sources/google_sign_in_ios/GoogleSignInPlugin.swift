@@ -108,11 +108,11 @@ public final class GoogleSignInPlugin: NSObject, FlutterPlugin, FSIGoogleSignInA
   private let googleServiceProperties: [String: Any]?
 
   /// The view provider, to access the current Flutter view.
-  private let viewProvider: any FSIViewProvider
+  private let viewProvider: ViewProvider
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let instance = GoogleSignInPlugin(
-      viewProvider: FSIDefaultViewProvider(registrar: registrar))
+      viewProvider: DefaultViewProvider(registrar: registrar))
     registrar.addApplicationDelegate(instance)
     #if os(iOS)
       registrar.addSceneDelegate(instance)
@@ -124,12 +124,12 @@ public final class GoogleSignInPlugin: NSObject, FlutterPlugin, FSIGoogleSignInA
   }
 
   /// Inject view provider for testing.
-  convenience init(viewProvider: any FSIViewProvider) {
+  convenience init(viewProvider: ViewProvider) {
     self.init(signIn: FSIGIDSignInWrapper(), viewProvider: viewProvider)
   }
 
   /// Inject `FSIGIDSignIn` for testing.
-  convenience init(signIn: any FSIGIDSignIn, viewProvider: any FSIViewProvider) {
+  convenience init(signIn: any FSIGIDSignIn, viewProvider: ViewProvider) {
     self.init(
       signIn: signIn,
       viewProvider: viewProvider,
@@ -139,7 +139,7 @@ public final class GoogleSignInPlugin: NSObject, FlutterPlugin, FSIGoogleSignInA
   /// Inject `FSIGIDSignIn` and `googleServiceProperties` for testing.
   init(
     signIn: any FSIGIDSignIn,
-    viewProvider: any FSIViewProvider,
+    viewProvider: ViewProvider,
     googleServiceProperties: [String: Any]?
   ) {
     self.signIn = signIn

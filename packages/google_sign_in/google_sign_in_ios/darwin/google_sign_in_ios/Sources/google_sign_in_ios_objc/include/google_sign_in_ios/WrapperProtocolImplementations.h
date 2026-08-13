@@ -5,25 +5,11 @@
 @import GoogleSignIn;
 
 #import "FSIGoogleSignInProtocols.h"
-#import "FSIViewProvider.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 // TODO(stuarmorgan): Replace these with protocol extensions when migrating to Swift.
 // https://github.com/flutter/flutter/issues/119103
-
-/// Implementation of @c FSIViewProvider that passes through to the registrar.
-@interface FSIDefaultViewProvider : NSObject <FSIViewProvider>
-/// Returns a provider backed by the given registrar.
-- (instancetype)initWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar
-    NS_DESIGNATED_INITIALIZER;
-- (instancetype)init NS_UNAVAILABLE;
-
-/// The registrar backing the provider.
-@property(readonly) NSObject<FlutterPluginRegistrar> *registrar;
-@end
-
-#pragma mark -
 
 /// Implementation of @c FSIGIDSignIn that passes through to GIDSignIn.
 @interface FSIGIDSignInWrapper : NSObject <FSIGIDSignIn>

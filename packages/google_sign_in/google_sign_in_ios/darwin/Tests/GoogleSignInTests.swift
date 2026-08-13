@@ -17,8 +17,8 @@ import Testing
   import Flutter
 #endif
 
-// Test implementation of FSIViewProvider.
-class TestViewProvider: NSObject, FSIViewProvider {
+// Test implementation of ViewProvider.
+class TestViewProvider: ViewProvider {
   #if os(OSX)
     // The view containing the Flutter content.
     var view: NSView?

@@ -1,3 +1,7 @@
+## 6.3.3
+
+* Migrates the plugin class from Objective-C to Swift.
+
 ## 6.3.2
 
 * Creates Swift Package Manager target for Swift implementation.

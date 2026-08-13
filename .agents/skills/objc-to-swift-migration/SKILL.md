@@ -64,8 +64,10 @@ coverage-only, these are explicit — do not guess):
   for a full cutover.
 - `/objc-to-swift-migration migrate google_sign_in_ios` — **incremental
   implementation (the default)**: mixed Obj-C/Swift, one small green PR at a
-  time (see "Rollout strategy"). Do **not** delete the Obj-C plugin, switch
-  Pigeon to `swiftOut`, or flip `pluginClass` until the last PRs.
+  time (see "Rollout strategy"). Do **not** switch Pigeon to `swiftOut` until
+  the last PR. The Swift plugin class and `pluginClass` flip can land
+  earlier, still implementing the **Obj-C** generated Host API (camera
+  [#9007](https://github.com/flutter/packages/pull/9007)).
 - `/objc-to-swift-migration full-cutover url_launcher_ios` (or "big-bang",
   "single PR", "migrate everything at once") — **opt-in only**, same idea as
   coverage-only: one coherent PR covering all Sources + tests (Phases 0→8 in
@@ -92,11 +94,11 @@ coverage-only, these are explicit — do not guess):
    until asked to implement it.
 6. If asked to **implement** without `full-cutover` / "single PR" / "all at
    once": use incremental mode. Set up mixed-language packaging first (see
-   Rollout strategy), then port **one class (or a ~500-line slice) per PR**,
-   leaving the Obj-C plugin registered. Do not jump to Phase 1 Pigeon
-   `swiftOut` or Phase 4's plugin-class deletion until the remaining Obj-C
-   is only the plugin shell (or the user switched to full-cutover). If OCMock
-   mocks system APIs, don't jump ahead of Phase 3 seams.
+   Rollout strategy), then port **one class (or a ~500-line slice) per PR**.
+   Do not jump to Phase 1 Pigeon `swiftOut` until every hand-written class
+   (including the plugin) is already Swift. Do **not** wait to port the
+   plugin class until the Pigeon switch — Swift can implement the Obj-C
+   Host API. If OCMock mocks system APIs, don't jump ahead of Phase 3 seams.
 7. If asked to **full-cutover**: work through Phases 0→8 in one PR, keeping
    the Non-negotiables satisfied at every step.
 8. If running on a non-Mac environment, see "Requires macOS + Xcode" at the
@@ -104,10 +106,10 @@ coverage-only, these are explicit — do not guess):
    native test/simulator steps as pending manual verification.
 9. After **each incremental PR** (or after a full-cutover PR), give a short
    status: what landed, that CI should stay green, and what the next PR is.
-   Give **Phase 9's end-of-migration summary** only when the last cutover PR
-   is done (no remaining hand-written `.m` except an ExceptionCatcher-style
-   helper, if still required) — never skip it, even if some Phase 8
-   validation steps had to be skipped for environment reasons.
+   Give **Phase 9's end-of-migration summary** only when the last PR
+   (Pigeon `swiftOut`) is done (no remaining hand-written `.m` except an
+   ExceptionCatcher-style helper, if still required) — never skip it, even
+   if some Phase 8 validation steps had to be skipped for environment reasons.
 10. Only **after** that summary, ask whether the user also wants existing
     coverage **gaps backfilled** with new native tests (Phase 10, optional —
     distinct from porting *existing* tests, which is always mandatory).
@@ -285,7 +287,7 @@ covered and what isn't".
 
 | Package | Demonstrates |
 |---|---|
-| `camera_avfoundation` | **Default template:** incremental mixed-language PRs. Separate SPM targets (`*_objc` + Swift), CocoaPods globs both into one pod, `#if canImport(*_objc)` in tests. Utils → features → plugin core → wrappers → Pigeon. Copy this whenever migrating in parts. |
+| `camera_avfoundation` | **Default template:** incremental mixed-language PRs. Separate SPM targets (`*_objc` + Swift), CocoaPods globs both into one pod, `#if canImport(*_objc)` in tests. Order: tests → packaging ([#8988](https://github.com/flutter/packages/pull/8988)) → utils/features/wrappers (Obj-C plugin calls Swift) → Swift plugin still on Obj-C Pigeon ([#9007](https://github.com/flutter/packages/pull/9007)) → Pigeon `swiftOut` last ([#10939](https://github.com/flutter/packages/pull/10939) prep, [#10980](https://github.com/flutter/packages/pull/10980) switch). Copy this whenever migrating in parts. |
 | `url_launcher/url_launcher_ios` | Full-cutover template only (opt-in): `Package.swift`, podspec, protocol-based DI (`Launcher.swift`/`ViewPresenter.swift`), `pluginClass` renamed off `FLT` prefix, patch-level version bump |
 | `file_selector/file_selector_ios` | Same full-cutover pattern, Pigeon `swiftOut` |
 | `quick_actions_ios` | Small multi-PR but not mixed-language: plugin class first, then remaining components; dropped custom Obj-C `Test` submodule; also migrated `RunnerUITests` |
@@ -306,9 +308,11 @@ already using Swift Testing) while its core plugin class file(s) are still
 test doubles but stopped short of the plugin class itself, or when OCMock was
 removed as a standalone effort before the rest of the migration. Incremental
 mode still applies: set up the mixed-language targets, port remaining Obj-C
-types (wrappers, helpers) into the Swift target one PR at a time, and only
-then do the plugin-class + Pigeon `swiftOut` + `pluginClass` cutover. Do
-**not** collapse that leftover into a single full-cutover PR unless asked.
+types (wrappers, helpers) into the Swift target one PR at a time, then port
+the plugin class **still implementing the Obj-C Pigeon Host API**, and only
+after that switch Pigeon to `swiftOut`. Do **not** collapse plugin + Pigeon
+into one PR, and do **not** collapse the leftover into a single full-cutover
+PR, unless asked.
 
 ## Native test framework: Swift Testing, not XCTest
 
@@ -349,8 +353,11 @@ testing"`, or just open a recently-migrated package's `RunnerTests/*.swift`).
 
 **Default is incremental mixed-language PRs.** Obj-C and Swift coexist until
 the last PRs. Each PR must leave the package **buildable and tests passing**.
-Aim for about **~500 lines of reviewable diff** per PR (generated Pigeon
-output in the *final* PRs may exceed that — call it out as mechanical).
+Aim for about **~500 lines of reviewable (hand-written) diff** per PR.
+Generated Pigeon output does **not** count toward that budget and belongs in
+the **last** PR — that switch is expected to be the largest slice (camera
+[#10980](https://github.com/flutter/packages/pull/10980) was +2,103/−2,455;
+call the generated portion out as mechanical).
 
 **Full-cutover** (one PR, all Sources + tests, delete Obj-C immediately) is
 **opt-in only**, like coverage-only: the user must say `full-cutover`,
@@ -419,9 +426,13 @@ already done (e.g. tests already Swift).
    CocoaPods glob (details below). Plugin still Obj-C.
 3. **Implementation slices** — one class / ~500-line group per PR; remaining
    Obj-C **calls** the new Swift; delete that class’s `.m/.h` in the same PR.
-4. **Cutover PR(s)** — Swift plugin class, Pigeon `swiftOut`, `pluginClass`,
-   test type-renames, remove leftover Obj-C (except ExceptionCatcher if
-   needed).
+4. **Plugin class** — port it to Swift, flip `pluginClass`, keep
+   `objcHeaderOut` / `SetUpF*Api` / `FlutterError` completions. Tests stay
+   on the Obj-C Pigeon call sites. See "Swift plugin on Obj-C Pigeon" below.
+5. **Pigeon `swiftOut` last** — switch generated Host API language, rewrite
+   plugin methods + tests to the Swift `Result` / `PigeonError` API, delete
+   `messages.g.{h,m}`. Remove leftover Obj-C except ExceptionCatcher if
+   needed. This PR is allowed to be large because of generated code.
 
 ### Incremental packaging (first mixed-language PR, after tests if needed)
 
@@ -449,8 +460,8 @@ can mix them in one pod. Follow `camera_avfoundation` implementation PR #8988:
    #endif
    ```
 6. Keep `pubspec.yaml` `pluginClass` pointing at the **Obj-C plugin class**
-   until the cutover PR.
-7. **Do not** switch Pigeon to `swiftOut` in this PR — the Obj-C plugin still
+   until the **plugin-class PR** (step 4), not until the Pigeon switch.
+7. **Do not** switch Pigeon to `swiftOut` in this PR — production code still
    implements the Obj-C generated API.
 
 This packaging-only PR can be small; it is allowed to be mostly moves +
@@ -469,21 +480,45 @@ Port **bottom-up, one class (or one tight group) per PR**:
    PR that adds the Swift replacement and updates call sites.
 4. Protocol seams for OCMock'd system APIs (Phase 3) when tests still need
    them — often already done in a tests-first package.
-5. **Last functional PRs (the cutover), still separate if large:**
-   - Port the plugin class to Swift; update `pluginClass`.
-   - Phase 1: Pigeon `swiftOut`, delete `messages.g.{h,m}`, regenerate
-     Dart only if the generator is unchanged (empty `messages.g.dart` diff
-     is the goal).
-   - Update native tests/fakes for renamed Swift types.
-   - Delete `<pkg>_objc` (except a tiny ExceptionCatcher target if Swift
-     must still catch `NSException`s).
-   - Phase 7 CHANGELOG/version for the cutover.
+5. **Plugin class (still on Obj-C Pigeon).** Port the plugin to Swift and
+   flip `pluginClass`. It must conform to the **existing Obj-C** Host API
+   (`FSIGoogleSignInApi`, `FCPCameraApi`, …) and register with
+   `SetUpF*Api(...)`. Native tests keep `FlutterError` / Obj-C Pigeon types.
+   Camera: [#9007](https://github.com/flutter/packages/pull/9007).
+6. **Pigeon `swiftOut` last, its own PR.** Replace `objcHeaderOut`/
+   `objcSourceOut` with `swiftOut`, regenerate, delete `messages.g.{h,m}`,
+   rewrite plugin methods and tests to the Swift `Result` / `PigeonError`
+   API. Empty `dartOut` diff. Camera: [#10939](https://github.com/flutter/packages/pull/10939)
+   (prep) then [#10980](https://github.com/flutter/packages/pull/10980)
+   (the switch; author noted it cannot be split further). Generated files
+   make this the biggest PR — that is expected.
 
-Pigeon + plugin class + test type-renames often **must** land together
-because the host API language has to match the implementation. If that
-combined diff is huge, still keep it as **one cutover PR** rather than
-shipping a broken intermediate — but everything *before* that should
-already have been peeled off in smaller PRs.
+Do **not** combine steps 5 and 6. A Swift class can implement an Obj-C
+Pigeon protocol, so the Host API language does **not** have to change in
+the same PR as the plugin class. Combining them is what produces an
+unreviewable "cutover" diff. If the combined hand-written plugin + Pigeon
+rewrite would exceed ~500 lines, you **must** split this way rather than
+ship one large PR.
+
+### Swift plugin on Obj-C Pigeon
+
+This is the missing slice that keeps the plugin PR small:
+
+- Keep `pigeons/messages.dart` on `objcHeaderOut` / `objcSourceOut`.
+- Swift plugin: `class FooPlugin: NSObject, FlutterPlugin, FSIFooApi`
+  (the generated Obj-C `@protocol`).
+- Register with `SetUpFSIFooApi(messenger, instance)`, not
+  `FooApiSetup.setUp`.
+- Completions stay `(ResultType?, FlutterError?) -> Void` / error
+  out-params. Use `FlutterError`, not `PigeonError`.
+- Tests keep constructing `FSI*` types and calling
+  `plugin.configure(withParameters:error:)` / `signOutWithError(&error)`.
+  Only rename `FLTFooPlugin` → `FooPlugin`.
+- ExceptionCatcher (if the Obj-C plugin used `@try/@catch`) lands in
+  this PR, because Swift cannot catch `NSException`.
+
+The later Pigeon PR is then mostly generated `messages.g.swift` plus
+mechanical signature updates on the already-Swift plugin and tests.
 
 ### Each incremental PR must
 
@@ -513,11 +548,12 @@ dart run script/tool/bin/flutter_plugin_tools.dart native-test --ios --no-integr
 
 ### Phase 1 — Pigeon
 
-**Incremental (default): skip this phase until the cutover PR.** The Obj-C
-plugin still implements the Obj-C generated API (`messages.g.h` / `.m`).
-Switching `swiftOut` earlier breaks that implementation.
+**Incremental (default): skip this phase until the last PR, even if the
+plugin class is already Swift.** A Swift plugin can implement the Obj-C
+generated Host API (`messages.g.h` / `.m`, `SetUpF*Api`). Switching
+`swiftOut` earlier is what forces an oversized combined diff.
 
-**Full-cutover, or the last incremental PR(s):**
+**Full-cutover, or the last incremental PR:**
 If `pigeons/messages.dart` (or equivalent) has `objcHeaderOut`/`objcSourceOut`/
 `objcOptions`, replace with a `swiftOut` pointing at the platform's `Sources/`
 directory from the Platform variants table, e.g.:
@@ -585,10 +621,16 @@ plugin may mock entirely different frameworks):
   allows it.
 
 ### Phase 4 — Port the core plugin class(es)
-**Incremental (default): last functional PR(s), after helpers/wrappers live in
-Swift.** Until then, keep the Obj-C plugin class and `pluginClass:` unchanged.
+**Incremental (default): after helpers/wrappers live in Swift, and before
+Pigeon `swiftOut`.** Until this PR, keep the Obj-C plugin class and
+`pluginClass:` unchanged.
 
-**Full-cutover, or that last incremental PR:**
+**This PR (incremental):** Swift plugin conforming to the **Obj-C** Host
+API — see "Swift plugin on Obj-C Pigeon". Do **not** change
+`pigeons/messages.dart`, do **not** delete `messages.g.{h,m}`, and do
+**not** rewrite tests onto the Swift `Result` API yet. Tests only rename
+`FLTFooPlugin` → `FooPlugin`.
+
 1. Rename off the vendor Obj-C prefix (e.g. `FLT`, `FPP`, whatever this repo's
    convention for the package is) to a plain Swift name (e.g.
    `FLTFooPlugin` → `FooPlugin`), matching `url_launcher_ios` precedent.
@@ -600,11 +642,14 @@ Swift.** Until then, keep the Obj-C plugin class and `pluginClass:` unchanged.
    every platform entry that changed (a `_darwin`-shared package has one entry
    per platform, e.g. both `ios:` and `macos:`). Leave `dartPluginClass`
    untouched — it names a Dart class and has nothing to do with this migration.
-5. Delete all `.m`/`.h`, the modulemap, umbrella header, and `include/`
-   directory once nothing references them.
-6. Simplify `Package.swift` (drop `cSettings`/header-search-path/ObjC excludes)
-   and the podspec (there may be one per platform for a `_darwin`-shared
-   package):
+5. Delete the Obj-C plugin `.m`/`.h` (and `*_Test.h`) in this PR. Leave Pigeon
+   generated Obj-C and any ExceptionCatcher in `<pkg>_objc`.
+
+**Full-cutover only** (or after the later Pigeon PR has removed generated
+Obj-C): delete remaining `.m`/`.h`, the modulemap, umbrella header, and
+`include/` once nothing references them, then simplify `Package.swift`
+(drop `cSettings`/header-search-path except ExceptionCatcher) and the
+podspec:
    ```ruby
    s.swift_version = '5.0'
    s.source_files = '<pkg>/Sources/**/*.swift'
@@ -668,8 +713,11 @@ dart run script/tool/bin/flutter_plugin_tools.dart update-release-info \
   --version=minimal --base-branch=origin/main \
   --changelog="Migrates <this slice> from Objective-C to Swift."
 ```
-On the **final cutover PR** (or a full-cutover PR), use a summary changelog
-such as:
+On the **final Pigeon PR** (or a full-cutover PR), use a slice-specific
+changelog such as "Converts the Pigeon host API from Objective-C to Swift"
+— do **not** rewrite earlier slice changelogs into one "migrates the
+platform implementation" summary; those PRs already shipped their own
+entries. For a true single-PR full-cutover, that summary line is fine:
 ```bash
 dart run script/tool/bin/flutter_plugin_tools.dart update-release-info \
   --version=minimal --base-branch=origin/main \
@@ -708,12 +756,12 @@ Also verify both dependency paths resolve: CocoaPods (`example/<platform>/Podfil
 and SPM (Xcode "Add Package"/the repo's SPM example variant).
 
 ### Phase 9 — End-of-migration summary (mandatory)
-After **each incremental PR**, report briefly: files moved/ported, that the
-Obj-C plugin is still registered (until cutover), next PR in the series.
+After **each incremental PR**, report briefly: files moved/ported, whether
+the Obj-C plugin is still registered, next PR in the series.
 Do **not** treat that as the end-of-migration summary.
 
 Give the full summary below only when the migration is actually finished
-(last cutover PR, or a full-cutover PR) — never end that session silently:
+(last Pigeon `swiftOut` PR, or a full-cutover PR) — never end that session silently:
 
 - **What changed:** the `.h`/`.m` files deleted and their Swift replacements
   (including any renamed classes), `pubspec.yaml` `pluginClass` updates, and

@@ -1,3 +1,7 @@
+## 6.3.5
+
+* Migrates GID SDK wrappers from Objective-C to Swift.
+
 ## 6.3.4
 
 * Migrates ViewProvider from Objective-C to Swift.

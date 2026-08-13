@@ -81,7 +81,7 @@ class TestSignIn: NSObject, FSIGIDSignIn {
 
   #if os(iOS) || targetEnvironment(macCatalyst)
     func signIn(
-      withPresenting presentingViewController: UIViewController,
+      withPresenting presentingViewController: UIViewController?,
       hint: String?,
       additionalScopes: [String]?,
       nonce: String?,
@@ -102,7 +102,7 @@ class TestSignIn: NSObject, FSIGIDSignIn {
     }
   #else
     func signIn(
-      withPresenting presentingWindow: NSWindow,
+      withPresenting presentingWindow: NSWindow?,
       hint: String?,
       additionalScopes: [String]?,
       nonce: String?,
@@ -208,7 +208,7 @@ class TestGoogleUser: NSObject, FSIGIDGoogleUser {
   #if os(iOS) || targetEnvironment(macCatalyst)
     func addScopes(
       _ scopes: [String],
-      presenting presentingViewController: UIViewController,
+      presenting presentingViewController: UIViewController?,
       completion: (((any FSIGIDSignInResult)?, Error?) -> Void)?
     ) {
       self.requestedScopes = scopes
@@ -221,7 +221,7 @@ class TestGoogleUser: NSObject, FSIGIDGoogleUser {
   #elseif os(OSX)
     func addScopes(
       _ scopes: [String],
-      presenting presentingWindow: NSWindow,
+      presenting presentingWindow: NSWindow?,
       completion: (((any FSIGIDSignInResult)?, Error?) -> Void)?
     ) {
       self.requestedScopes = scopes
@@ -711,16 +711,16 @@ func loadGoogleServiceInfo() -> [String: Any]? {
 func createTestPlugin(
   viewProvider: TestViewProvider = TestViewProvider(),
   googleServiceProperties: [String: Any]? = nil
-) -> (FLTGoogleSignInPlugin, TestSignIn) {
+) -> (GoogleSignInPlugin, TestSignIn) {
   let fakeSignIn = TestSignIn()
   return (
-    FLTGoogleSignInPlugin(
+    GoogleSignInPlugin(
       signIn: fakeSignIn, viewProvider: viewProvider,
       googleServiceProperties: googleServiceProperties), fakeSignIn
   )
 }
 
-func addSignedInUser(to plugin: FLTGoogleSignInPlugin) -> TestGoogleUser {
+func addSignedInUser(to plugin: GoogleSignInPlugin) -> TestGoogleUser {
   let identifier = "fakeID"
   let user = TestGoogleUser(identifier)
   plugin.usersByIdentifier[identifier] = user

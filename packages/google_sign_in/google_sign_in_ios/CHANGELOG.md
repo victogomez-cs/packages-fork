@@ -1,3 +1,7 @@
+## 6.3.2
+
+* Creates Swift Package Manager target for Swift implementation.
+
 ## 6.3.1
 
 * Improves testability of iOS scene URL handling.

@@ -99,10 +99,10 @@ private func pigeonErrorCode(for gidSignInErrorCode: Int) -> FSIGoogleSignInErro
 public final class GoogleSignInPlugin: NSObject, FlutterPlugin, FSIGoogleSignInApi {
   /// Instance used to manage Google Sign In authentication including
   /// sign in, sign out, and requesting additional scopes.
-  let signIn: any FSIGIDSignIn
+  let signIn: any GIDSignInProtocol
 
   /// A mapping of user IDs to GIDGoogleUser instances to use for follow-up calls.
-  var usersByIdentifier: [String: any FSIGIDGoogleUser] = [:]
+  var usersByIdentifier: [String: any GIDGoogleUserProtocol] = [:]
 
   /// The contents of GoogleService-Info.plist, if it exists.
   private let googleServiceProperties: [String: Any]?
@@ -125,20 +125,20 @@ public final class GoogleSignInPlugin: NSObject, FlutterPlugin, FSIGoogleSignInA
 
   /// Inject view provider for testing.
   convenience init(viewProvider: ViewProvider) {
-    self.init(signIn: FSIGIDSignInWrapper(), viewProvider: viewProvider)
+    self.init(signIn: GIDSignInWrapper(), viewProvider: viewProvider)
   }
 
-  /// Inject `FSIGIDSignIn` for testing.
-  convenience init(signIn: any FSIGIDSignIn, viewProvider: ViewProvider) {
+  /// Inject `GIDSignInProtocol` for testing.
+  convenience init(signIn: any GIDSignInProtocol, viewProvider: ViewProvider) {
     self.init(
       signIn: signIn,
       viewProvider: viewProvider,
       googleServiceProperties: loadGoogleServiceInfo())
   }
 
-  /// Inject `FSIGIDSignIn` and `googleServiceProperties` for testing.
+  /// Inject `GIDSignInProtocol` and `googleServiceProperties` for testing.
   init(
-    signIn: any FSIGIDSignIn,
+    signIn: any GIDSignInProtocol,
     viewProvider: ViewProvider,
     googleServiceProperties: [String: Any]?
   ) {
@@ -302,7 +302,7 @@ public final class GoogleSignInPlugin: NSObject, FlutterPlugin, FSIGoogleSignInA
     hint: String?,
     additionalScopes: [String]?,
     nonce: String?,
-    completion: @escaping (FSIGIDSignInResult?, Error?) -> Void
+    completion: @escaping (GIDSignInResultProtocol?, Error?) -> Void
   ) {
     #if os(macOS)
       signIn.signIn(
@@ -324,8 +324,8 @@ public final class GoogleSignInPlugin: NSObject, FlutterPlugin, FSIGoogleSignInA
   /// Wraps the iOS and macOS scope addition methods.
   private func performAddScopes(
     _ scopes: [String],
-    for user: any FSIGIDGoogleUser,
-    completion: @escaping (FSIGIDSignInResult?, Error?) -> Void
+    for user: any GIDGoogleUserProtocol,
+    completion: @escaping (GIDSignInResultProtocol?, Error?) -> Void
   ) {
     #if os(macOS)
       user.addScopes(scopes, presenting: viewProvider.view?.window, completion: completion)
@@ -359,7 +359,7 @@ public final class GoogleSignInPlugin: NSObject, FlutterPlugin, FSIGoogleSignInA
   }
 
   private func handleAuthResult(
-    user: (any FSIGIDGoogleUser)?,
+    user: (any GIDGoogleUserProtocol)?,
     serverAuthCode: String?,
     error: Error?,
     completion: @escaping (FSISignInResult?, FlutterError?) -> Void
@@ -387,7 +387,7 @@ public final class GoogleSignInPlugin: NSObject, FlutterPlugin, FSIGoogleSignInA
   }
 
   private func didSignIn(
-    for user: any FSIGIDGoogleUser,
+    for user: any GIDGoogleUserProtocol,
     serverAuthCode: String?,
     completion: @escaping (FSISignInResult?, FlutterError?) -> Void
   ) {

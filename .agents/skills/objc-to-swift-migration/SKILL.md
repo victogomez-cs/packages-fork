@@ -2,9 +2,10 @@
 name: objc-to-swift-migration
 description: >-
   Migrate a flutter/packages iOS/macOS plugin implementation (and its OCMock-based
-  native tests) from Objective-C to Swift with zero behavior change, following the
-  conventions established by camera_avfoundation (incremental mixed-language PRs)
-  and url_launcher_ios / file_selector_ios / quick_actions_ios (full cutover).
+  native tests) from Objective-C to Swift with zero behavior change, always
+  following the repository root AGENTS.md, plus the conventions established by
+  camera_avfoundation (incremental mixed-language PRs) and url_launcher_ios /
+  file_selector_ios / quick_actions_ios (full cutover).
   Default is incremental: keep Obj-C and Swift compiling together across a series
   of small, independently-green PRs (~500 lines). A single-PR full cutover is
   opt-in only, like coverage-only mode. Use when asked to migrate, convert, or
@@ -27,6 +28,30 @@ Platform- and package-agnostic playbook for converting **any** flutter/packages
 federated-plugin Darwin implementation package (iOS, macOS, or a shared
 `_darwin` package) from Objective-C to Swift with **no logic changes** — only
 language/idiom changes. Ask the user for the target package name if not given.
+
+## Repository agent guide (mandatory)
+
+This skill **specializes** Darwin Obj-C → Swift migration. It does **not**
+replace the repository agent guide. **Always** read and follow
+[`AGENTS.md`](../../../AGENTS.md) at the repository root **before** producing
+a plan or writing any code, and keep following it for the entire session
+(coverage-only, plan, incremental PRs, and full-cutover).
+
+That includes, at minimum — `AGENTS.md` is the source of truth, not this
+summary:
+
+- Format every change with `flutter_plugin_tools.dart format`.
+- Pass analyze, Dart tests, and relevant native/integration tests.
+- Update `CHANGELOG.md` and `pubspec.yaml` version for any non-test
+  production change (prefer `update-release-info --version=minimal`).
+- Run Pigeon after editing `pigeons/` files; run `build_runner` for mockito.
+- Follow federated-plugin structure, tooling setup (`REPO_ROOT`,
+  `script/tool`), and language style guides.
+
+If this skill and `AGENTS.md` appear to conflict, **`AGENTS.md` wins** for
+repo-wide contribution, tooling, formatting, testing, and CHANGELOG rules.
+This skill only adds migration procedure (phasing, mixed-language packaging,
+OCMock replacement, Swift Testing, PR slicing).
 
 ## When to use this skill
 
@@ -77,8 +102,11 @@ coverage-only, these are explicit — do not guess):
   backfilling missing test coverage` — incremental implementation plus the
   optional Phase 10 coverage backfill (still as follow-up PRs).
 
-1. Read this entire file before writing any plan or code — the phases build on
-   each other and the Non-negotiables apply throughout.
+1. Read the repository root [`AGENTS.md`](../../../AGENTS.md) in full, then
+   this entire file, before writing any plan or code — the phases build on
+   each other and the Non-negotiables apply throughout. Follow `AGENTS.md`
+   for the rest of the session; do not skip it because this skill already
+   mentions format/tests/CHANGELOG.
 2. Identify the target package and which Platform variants row applies; ask
    the user if it's ambiguous (e.g. multiple candidate packages).
 3. Run Step 0 (Discovery) yourself by reading the target package's source —
@@ -170,12 +198,15 @@ assuming the layout shown above already exists.
   compile, the Swift-side Pigeon output has a real drift from before and needs
   fixing instead.
 - **CHANGELOG + version bump are mandatory** for any non-test code change (see
-  Phase 7). This repo's precedent (`url_launcher_ios` 6.2.0→6.2.1) treats a pure
-  Obj-C→Swift rewrite as a **patch-level, non-breaking** change since the Dart API
-  is untouched.
+  Phase 7 and `AGENTS.md`). This repo's precedent (`url_launcher_ios`
+  6.2.0→6.2.1) treats a pure Obj-C→Swift rewrite as a **patch-level,
+  non-breaking** change since the Dart API is untouched.
 - **Format, analyze, Dart tests, and native tests must all pass** before
   considering any phase done — not just the native suite. Never skip
-  `dart-test` just because the changes look native-only.
+  `dart-test` just because the changes look native-only. Use the
+  `flutter_plugin_tools.dart` commands from `AGENTS.md` (format, analyze,
+  dart-test, validate, publish-check, license-check), plus this skill's
+  native-test commands.
 
 ## Step 0: Discovery
 
@@ -522,10 +553,12 @@ mechanical signature updates on the already-Swift plugin and tests.
 
 ### Each incremental PR must
 
-- Stay green: `analyze`, `dart-test`, and native tests.
+- Stay green per `AGENTS.md`: `format`, `analyze`, `dart-test`, and native
+  tests (plus `validate` / `publish-check` / `license-check` when wrapping
+  up a PR).
 - Update CHANGELOG + version when it changes **non-test production** code
-  (contributing rules). Packaging-only or test-only PRs may use `NEXT` /
-  override labels only if they match the documented exemptions.
+  (`AGENTS.md` + contributing rules). Packaging-only or test-only PRs may
+  use `NEXT` / override labels only if they match the documented exemptions.
 - Be independently revertable: later PRs in the series depend on earlier
   ones, but reverting the tip must not leave `main` unbuildable.
 - Not add dead Swift that nothing calls — wire Obj-C → Swift in the same PR.
@@ -705,9 +738,9 @@ plugin's own sibling packages establish otherwise — this repo doesn't require
 converting the example app shell.
 
 ### Phase 7 — CHANGELOG, version, docs
-Every incremental PR that changes non-test production code needs a patch bump
-and CHANGELOG entry (contributing rules). Use `update-release-info` per PR,
-not only at the end:
+Follow `AGENTS.md` for version and CHANGELOG updates. Every incremental PR
+that changes non-test production code needs a patch bump and CHANGELOG
+entry. Use `update-release-info` per PR, not only at the end:
 ```bash
 dart run script/tool/bin/flutter_plugin_tools.dart update-release-info \
   --version=minimal --base-branch=origin/main \
@@ -728,6 +761,7 @@ references (endorsed-plugin READMEs are usually minimal boilerplate — only a
 quick check needed). Check the umbrella app-facing package's docs too.
 
 ### Phase 8 — Validation (mandatory)
+Run the `AGENTS.md` validation suite plus this skill's native-test commands.
 Replace `<pkg>` with the actual package directory name, and use the platform
 flag(s) from the Platform variants table (`--ios`, `--macos`, or both):
 ```bash

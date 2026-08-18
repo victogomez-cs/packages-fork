@@ -1,3 +1,7 @@
+## 6.3.5
+
+* Converts the Pigeon host API from Objective-C to Swift.
+
 ## 6.3.4
 
 * Migrates GID SDK wrappers from Objective-C to Swift.

@@ -4,33 +4,7 @@
 
 #import "./include/google_sign_in_ios/WrapperProtocolImplementations.h"
 
-#import "./include/google_sign_in_ios/FSIViewProvider.h"
-
 @import GoogleSignIn;
-
-@implementation FSIDefaultViewProvider
-
-- (instancetype)initWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
-  self = [super init];
-  if (self) {
-    _registrar = registrar;
-  }
-  return self;
-}
-
-#if TARGET_OS_OSX
-- (NSView *)view {
-  return self.registrar.view;
-}
-#else
-- (UIViewController *)viewController {
-  return self.registrar.viewController;
-}
-#endif
-
-@end
-
-#pragma mark -
 
 @implementation FSIGIDSignInWrapper
 

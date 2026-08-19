@@ -1,3 +1,7 @@
+## 1.2.5
+
+* Adds unit test coverage for `setShortcutItems` with more than one shortcut item.
+
 ## 1.2.4
 
 * Adds support for UIScene lifecycle.

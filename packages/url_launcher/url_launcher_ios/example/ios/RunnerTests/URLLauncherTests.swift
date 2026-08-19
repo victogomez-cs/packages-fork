@@ -154,6 +154,11 @@ struct URLLauncherTests {
     #expect(viewPresenter.presentedController != nil)
   }
 
+  @Test func closeSafariViewControllerWithoutActiveSessionDoesNothing() {
+    // No session has been opened, so this should be a no-op rather than crashing.
+    createPlugin().closeSafariViewController()
+  }
+
   @Test func launchSafariViewControllerFailureWithNoViewPresenter() async {
     await confirmation("completion called") { confirmed in
       createPlugin(viewPresenter: nil).openUrlInSafariViewController(url: "https://flutter.dev") {

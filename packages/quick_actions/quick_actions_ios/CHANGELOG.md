@@ -1,3 +1,7 @@
+## 1.2.5
+
+* Adds unit test coverage for `setShortcutItems` when a shortcut item has no icon.
+
 ## 1.2.4
 
 * Adds support for UIScene lifecycle.

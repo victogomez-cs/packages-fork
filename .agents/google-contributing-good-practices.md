@@ -133,7 +133,9 @@ Typed Swift or a documented gap is better than a clever hack.
 2. Reply on **each review thread** with what you did, or why you did not.
 3. Optionally leave a short top-level PR comment so the reviewer is notified, for example:
   > @hellohuanlin addressed the review comments — PTAL.
-That is expected and allowed. GitHub already notifies on thread replies; the top-level ping is extra clarity, not a substitute for thread replies.
+  
+  - That is expected and allowed. GitHub already notifies on thread replies; the top-level ping is extra clarity, not a substitute for thread replies.
+  
 4. Wait for GitHub **Approve**. Then the reviewer adds `autosubmit`.
 5. Do **not** ping Discord for a re-review. Chat is for “no review after two weeks,” not “I pushed a fix.”
 

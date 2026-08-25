@@ -73,6 +73,30 @@ struct QuickActionsPluginTests {
     #expect(mockShortcutItemProvider.shortcutItems == [item])
   }
 
+  @Test func handleMethodCallSetShortcutItemsWithoutIcon() {
+    let rawItem = ShortcutItemMessage(
+      type: "SearchTheThing",
+      localizedTitle: "Search the thing"
+    )
+
+    let item = UIApplicationShortcutItem(
+      type: "SearchTheThing",
+      localizedTitle: "Search the thing",
+      localizedSubtitle: nil,
+      icon: nil,
+      userInfo: nil)
+
+    let flutterApi: MockFlutterApi = MockFlutterApi()
+    let mockShortcutItemProvider = MockShortcutItemProvider()
+
+    let plugin = QuickActionsPlugin(
+      flutterApi: flutterApi,
+      shortcutItemProvider: mockShortcutItemProvider)
+
+    plugin.setShortcutItems(itemsList: [rawItem])
+    #expect(mockShortcutItemProvider.shortcutItems == [item])
+  }
+
   @Test func handleMethodCallSetShortcutItemsWithMultipleItems() {
     let rawFirstItem = ShortcutItemMessage(
       type: "SearchTheThing",

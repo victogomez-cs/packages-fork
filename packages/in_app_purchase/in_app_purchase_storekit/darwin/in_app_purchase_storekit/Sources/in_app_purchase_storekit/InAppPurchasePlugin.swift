@@ -127,7 +127,7 @@ public class InAppPurchasePlugin: NSObject, FlutterPlugin, FIAInAppPurchaseAPI {
       return getPaymentQueueHandler()
       .getUnfinishedTransactions()
       .compactMap {
-        FIAObjectTranslatorSwift.convertTransaction(toPigeon: $0)
+        FIAObjectTranslator.convertTransaction(toPigeon: $0)
       }
   }
 
@@ -135,7 +135,7 @@ public class InAppPurchasePlugin: NSObject, FlutterPlugin, FIAInAppPurchaseAPI {
     -> FIASKStorefrontMessage?
   {
     if let storefront = getPaymentQueueHandler().storefront {
-      return FIAObjectTranslatorSwift.convertStorefront(toPigeon: storefront)
+      return FIAObjectTranslator.convertStorefront(toPigeon: storefront)
     }
     return nil
   }
@@ -173,7 +173,7 @@ public class InAppPurchasePlugin: NSObject, FlutterPlugin, FIAInAppPurchaseAPI {
         self.productsCache[product.productIdentifier] = product
       }
 
-      if let responseMessage = FIAObjectTranslatorSwift.convertProductsResponse(toPigeon: response) {
+      if let responseMessage = FIAObjectTranslator.convertProductsResponse(toPigeon: response) {
         completion(responseMessage, nil)
       }
       self.requestHandlers.remove(handler)
@@ -209,7 +209,7 @@ public class InAppPurchasePlugin: NSObject, FlutterPlugin, FIAInAppPurchaseAPI {
       !paymentDiscountMap.isEmpty
     {
       var invalidError: NSString?
-      if let paymentDiscount = FIAObjectTranslatorSwift.getSKPaymentDiscount(
+      if let paymentDiscount = FIAObjectTranslator.getSKPaymentDiscount(
         fromMap: paymentDiscountMap, withError: &invalidError)
       {
         payment.paymentDiscount = paymentDiscount
@@ -375,7 +375,7 @@ public class InAppPurchasePlugin: NSObject, FlutterPlugin, FIAInAppPurchaseAPI {
 
   public func handleTransactionsUpdated(_ transactions: [SKPaymentTransaction]) {
     let translatedTransactions = transactions.map {
-      FIAObjectTranslatorSwift.getMapFrom($0)
+      FIAObjectTranslator.getMapFrom($0)
     }
     transactionObserverCallbackChannel?.invokeMethod(
       "updatedTransactions", arguments: translatedTransactions)
@@ -383,7 +383,7 @@ public class InAppPurchasePlugin: NSObject, FlutterPlugin, FIAInAppPurchaseAPI {
 
   public func handleTransactionsRemoved(_ transactions: [SKPaymentTransaction]) {
     let translatedTransactions = transactions.map {
-      FIAObjectTranslatorSwift.getMapFrom($0)
+      FIAObjectTranslator.getMapFrom($0)
     }
     transactionObserverCallbackChannel?.invokeMethod(
       "removedTransactions", arguments: translatedTransactions)
@@ -391,7 +391,7 @@ public class InAppPurchasePlugin: NSObject, FlutterPlugin, FIAInAppPurchaseAPI {
 
   public func handleTransactionRestoreFailed(_ error: NSError) {
     transactionObserverCallbackChannel?.invokeMethod(
-      "restoreCompletedTransactionsFailed", arguments: FIAObjectTranslatorSwift.getMapFrom(error))
+      "restoreCompletedTransactionsFailed", arguments: FIAObjectTranslator.getMapFrom(error))
   }
 
   public func restoreCompletedTransactionsFinished() {
@@ -404,8 +404,8 @@ public class InAppPurchasePlugin: NSObject, FlutterPlugin, FIAInAppPurchaseAPI {
     transactionObserverCallbackChannel?.invokeMethod(
       "shouldAddStorePayment",
       arguments: [
-        "payment": FIAObjectTranslatorSwift.getMapFrom(payment),
-        "product": FIAObjectTranslatorSwift.getMapFrom(product),
+        "payment": FIAObjectTranslator.getMapFrom(payment),
+        "product": FIAObjectTranslator.getMapFrom(product),
       ])
     return false
   }

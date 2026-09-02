@@ -60,12 +60,12 @@ Condensed. Details live in the [Tree hygiene](https://github.com/flutter/flutter
 1. File or reuse a GitHub issue. Every PR should list at least one issue.
 2. Discuss non-trivial design on the issue first.
 3. Implement on a branch from current `main`, with tests.
-4. Open a PR. Title for packages: `[package_name] Short description`.
+4. Open a PR from a **fork** (see [Where to open a PR](#where-to-open-a-pr)). Title for packages: `[package_name] Short description`.
 5. Sign the CLA. Fill the PR checklist honestly.
 6. Wait for reviewers to be assigned (weekly triage). Contributors without write access are limited to **2 concurrent open PRs** per repo (drafts do not count).
 7. Keep CI green. If only tests changed, version/CHANGELOG may be exempt; if CI disagrees, wait for a team member to add an override label rather than arguing in code.
 8. Address review comments, then wait for **GitHub Approve (LGTM)** from the code owners and from anyone else who left comments. An “LGTM” text comment is not enough.
-9. Do not merge yourself if you are not in `flutter-hackers`. A reviewer adds `autosubmit`.
+9. Do **not** merge the PR yourself. Add the `autosubmit` label (or ask a reviewer to add it if you are not in `flutter-hackers`). A bot lands it. See [Landing changes with autosubmit](https://github.com/flutter/flutter/blob/main/docs/infra/Landing-Changes-With-Autosubmit.md).
 10. Watch post-submit. If something breaks, revert first.
 
 **When to ping in Discord:** only if **nobody has reviewed after two weeks**. Start in `#hackers` or `#hackers-new` with what the PR does and a link. Do not Discord-ping just because comments were addressed.
@@ -83,6 +83,40 @@ git push origin your_branch_name
 ```
 
 If GitHub ever shows dozens of files when your real change is one file, rebase (or close/reopen the PR) to refresh the diff. Never force-push `main`.
+
+---
+
+
+
+## Where to open a PR
+
+Team process (confirmed with Flutter iOS / packages maintainers). [Tree hygiene](https://github.com/flutter/flutter/blob/main/docs/contributing/Tree-hygiene.md#overview) is the official source: work on a **fork**, open a PR into `flutter/packages` `main`, then land with **autosubmit**.
+
+### Landing (every PR)
+
+Once the PR is approved and CI is green, **do not click Merge**. Add the `autosubmit` label. The bot squash-merges when it is ready.
+
+- If you are in `flutter-hackers`, you add the label.
+- If you are not, a reviewer adds it.
+
+Manual merge skips the landing path Flutter uses for tree health and reverts.
+
+### PRs come from a fork
+
+A PR should **not** be pushed to `flutter/packages`. Use the fork.
+
+Tree hygiene names the fork `origin` and upstream `upstream`. In this checkout, `origin` is `flutter/packages` and the fork is `fork`. Push the feature branch to **the fork**:
+
+```bash
+git fetch origin
+git checkout origin/main -b your_branch_name
+# implement, commit
+git push fork your_branch_name
+```
+
+Open the PR against `flutter/packages` `main` from that fork branch. Example: [flutter/packages#12536](https://github.com/flutter/packages/pull/12536) (`victogomez-cs/packages-fork` → `flutter/packages` `main`).
+
+This matches Tree hygiene step 5–6 (branch on your GitHub **fork**, then submit the PR).
 
 ---
 
@@ -136,7 +170,7 @@ Typed Swift or a documented gap is better than a clever hack.
   
   - That is expected and allowed. GitHub already notifies on thread replies; the top-level ping is extra clarity, not a substitute for thread replies.
   
-4. Wait for GitHub **Approve**. Then the reviewer adds `autosubmit`.
+4. Wait for GitHub **Approve**. Then add `autosubmit` (or ask the reviewer to). Do **not** click Merge.
 5. Do **not** ping Discord for a re-review. Chat is for “no review after two weeks,” not “I pushed a fix.”
 
 
@@ -215,6 +249,7 @@ Be polite. Explain what happened and why. Give a next step. Example for dropping
 - [ ] TODOs use `TODO(username)` plus an issue URL.
 - [ ] Code formatted with `flutter_plugin_tools format`.
 - [ ] CI green (or failures explained as existing on `main`).
+- [ ] Ready to land with `autosubmit`, not a manual merge.
 - [ ] Top-level “PTAL” comment on the PR if a reviewer already engaged.
 - [ ] No Discord ping unless two weeks have passed with no review.
 - [ ] You personally verified the “addressed” claim; you did not paste an AI summary.

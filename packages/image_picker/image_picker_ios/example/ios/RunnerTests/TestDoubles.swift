@@ -10,6 +10,10 @@ import UniformTypeIdentifiers
 
 @testable import image_picker_ios
 
+#if canImport(image_picker_ios_objc)
+  @testable import image_picker_ios_objc
+#endif
+
 final class StubViewProvider: NSObject, FIPViewProvider {
   var viewController: UIViewController?
 
@@ -78,12 +82,12 @@ final class FakeCameraPermissionChecker: NSObject, CameraPermissionChecking {
   /// not-determined → granted/denied can be tested separately.
   var requestAccessGranted = false
 
-  func authorizationStatus(forMediaType mediaType: AVMediaType) -> AVAuthorizationStatus {
+  func authorizationStatus(for mediaType: AVMediaType) -> AVAuthorizationStatus {
     status
   }
 
   func requestAccess(
-    forMediaType mediaType: AVMediaType,
+    for mediaType: AVMediaType,
     completionHandler handler: @escaping @Sendable (Bool) -> Void
   ) {
     requestAccessCallCount += 1
@@ -122,10 +126,10 @@ final class FakePickerItem: NSObject, PickerItem {
 }
 
 final class RecordingPHPickerCreator: NSObject, PHPickerCreating {
-  private(set) var lastConfiguration: __PHPickerConfiguration?
+  private(set) var lastConfiguration: PHPickerConfiguration?
   var picker = PHPickerViewController(configuration: PHPickerConfiguration())
 
-  func makePicker(configuration: __PHPickerConfiguration) -> PHPickerViewController {
+  func makePicker(configuration: PHPickerConfiguration) -> PHPickerViewController {
     lastConfiguration = configuration
     return picker
   }

@@ -12,14 +12,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// Camera source and device availability checks.
 ///
 /// This protocol exists to allow injecting an alternate implementation for testing.
-NS_SWIFT_NAME(CameraAvailabilityChecking)
 @protocol FIPCameraAvailabilityChecking <NSObject>
 - (BOOL)isSourceTypeAvailable:(UIImagePickerControllerSourceType)sourceType;
 - (BOOL)isCameraDeviceAvailable:(UIImagePickerControllerCameraDevice)cameraDevice;
 @end
 
 /// Production implementation that forwards to UIImagePickerController.
-NS_SWIFT_NAME(DefaultCameraAvailability)
 @interface FIPDefaultCameraAvailability : NSObject <FIPCameraAvailabilityChecking>
 @end
 
@@ -28,7 +26,6 @@ NS_SWIFT_NAME(DefaultCameraAvailability)
 /// Camera authorization status and request-access calls.
 ///
 /// This protocol exists to allow injecting an alternate implementation for testing.
-NS_SWIFT_NAME(CameraPermissionChecking)
 @protocol FIPCameraPermissionChecking <NSObject>
 - (AVAuthorizationStatus)authorizationStatusForMediaType:(AVMediaType)mediaType;
 - (void)requestAccessForMediaType:(AVMediaType)mediaType
@@ -36,7 +33,6 @@ NS_SWIFT_NAME(CameraPermissionChecking)
 @end
 
 /// Production implementation that forwards to AVCaptureDevice.
-NS_SWIFT_NAME(DefaultCameraPermissionChecker)
 @interface FIPDefaultCameraPermissionChecker : NSObject <FIPCameraPermissionChecking>
 @end
 
@@ -45,14 +41,12 @@ NS_SWIFT_NAME(DefaultCameraPermissionChecker)
 /// Photo library authorization status and request-access calls.
 ///
 /// This protocol exists to allow injecting an alternate implementation for testing.
-NS_SWIFT_NAME(PhotoLibraryPermissionChecking)
 @protocol FIPPhotoLibraryPermissionChecking <NSObject>
 - (PHAuthorizationStatus)authorizationStatus;
 - (void)requestAuthorization:(void (^)(PHAuthorizationStatus status))handler;
 @end
 
 /// Production implementation that forwards to PHPhotoLibrary.
-NS_SWIFT_NAME(DefaultPhotoLibraryPermissionChecker)
 @interface FIPDefaultPhotoLibraryPermissionChecker : NSObject <FIPPhotoLibraryPermissionChecking>
 @end
 
@@ -70,15 +64,12 @@ NS_SWIFT_NAME(PickerItem)
 ///
 /// This protocol exists to allow injecting an alternate implementation for testing.
 API_AVAILABLE(ios(14))
-NS_SWIFT_NAME(PHPickerCreating)
 @protocol FIPPHPickerCreating <NSObject>
-- (PHPickerViewController *)makePickerWithConfiguration:(PHPickerConfiguration *)configuration
-    NS_SWIFT_NAME(makePicker(configuration:));
+- (PHPickerViewController *)makePickerWithConfiguration:(PHPickerConfiguration *)configuration;
 @end
 
 /// Production implementation that constructs a real PHPickerViewController.
 API_AVAILABLE(ios(14))
-NS_SWIFT_NAME(DefaultPHPickerCreator)
 @interface FIPDefaultPHPickerCreator : NSObject <FIPPHPickerCreating>
 @end
 

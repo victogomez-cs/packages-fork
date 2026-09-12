@@ -10,10 +10,6 @@ import UniformTypeIdentifiers
 
 @testable import image_picker_ios
 
-#if canImport(image_picker_ios_objc)
-  @testable import image_picker_ios_objc
-#endif
-
 @Suite
 @MainActor
 struct ImagePickerPluginTests {
@@ -36,11 +32,11 @@ struct ImagePickerPluginTests {
     let controller = RecordingImagePickerController()
     plugin.setImagePickerControllerOverrides([controller])
     plugin.pickImage(
-      withSource: FLTSourceSpecification.make(with: .camera, camera: .rear),
-      maxSize: FLTMaxSize(),
-      quality: nil,
-      fullMetadata: true
-    ) { _, _ in }
+      source: SourceSpecification(type: .camera, camera: .rear),
+      maxSize: MaxSize(),
+      imageQuality: nil,
+      requestFullMetadata: true
+    ) { _ in }
     #expect(controller.cameraDevice == .rear)
   }
 
@@ -49,11 +45,11 @@ struct ImagePickerPluginTests {
     let controller = RecordingImagePickerController()
     plugin.setImagePickerControllerOverrides([controller])
     plugin.pickImage(
-      withSource: FLTSourceSpecification.make(with: .camera, camera: .front),
-      maxSize: FLTMaxSize(),
-      quality: nil,
-      fullMetadata: true
-    ) { _, _ in }
+      source: SourceSpecification(type: .camera, camera: .front),
+      maxSize: MaxSize(),
+      imageQuality: nil,
+      requestFullMetadata: true
+    ) { _ in }
     #expect(controller.cameraDevice == .front)
   }
 
@@ -62,9 +58,9 @@ struct ImagePickerPluginTests {
     let controller = RecordingImagePickerController()
     plugin.setImagePickerControllerOverrides([controller])
     plugin.pickVideo(
-      withSource: FLTSourceSpecification.make(with: .camera, camera: .rear),
-      maxDuration: nil
-    ) { _, _ in }
+      source: SourceSpecification(type: .camera, camera: .rear),
+      maxDurationSeconds: nil
+    ) { _ in }
     #expect(controller.cameraDevice == .rear)
   }
 
@@ -73,9 +69,9 @@ struct ImagePickerPluginTests {
     let controller = RecordingImagePickerController()
     plugin.setImagePickerControllerOverrides([controller])
     plugin.pickVideo(
-      withSource: FLTSourceSpecification.make(with: .camera, camera: .front),
-      maxDuration: nil
-    ) { _, _ in }
+      source: SourceSpecification(type: .camera, camera: .front),
+      maxDurationSeconds: nil
+    ) { _ in }
     #expect(controller.cameraDevice == .front)
   }
 
@@ -90,9 +86,9 @@ struct ImagePickerPluginTests {
     let controller = UIImagePickerController()
     plugin.setImagePickerControllerOverrides([controller])
     plugin.pickMultiImage(
-      with: FLTMaxSize.make(withWidth: 100, height: 200), quality: 50, fullMetadata: true,
+      maxSize: MaxSize(width: 100, height: 200), imageQuality: 50, requestFullMetadata: true,
       limit: nil
-    ) { _, _ in }
+    ) { _ in }
     #expect(controller.sourceType == .photoLibrary)
   }
 
@@ -107,13 +103,12 @@ struct ImagePickerPluginTests {
     let controller = UIImagePickerController()
     plugin.setImagePickerControllerOverrides([controller])
     plugin.pickMedia(
-      with: FLTMediaSelectionOptions.make(
-        with: FLTMaxSize.make(withWidth: 100, height: 200),
+      mediaSelectionOptions: MediaSelectionOptions(
+        maxSize: MaxSize(width: 100, height: 200),
         imageQuality: 50,
         requestFullMetadata: true,
-        allowMultiple: true,
-        limit: nil)
-    ) { _, _ in }
+        allowMultiple: true)
+    ) { _ in }
     #expect(controller.sourceType == .photoLibrary)
   }
 
@@ -123,11 +118,11 @@ struct ImagePickerPluginTests {
     plugin.photoLibraryPermissionChecker = photo
     plugin.setImagePickerControllerOverrides([UIImagePickerController()])
     plugin.pickImage(
-      withSource: FLTSourceSpecification.make(with: .gallery, camera: .front),
-      maxSize: FLTMaxSize(),
-      quality: nil,
-      fullMetadata: false
-    ) { _, _ in }
+      source: SourceSpecification(type: .gallery, camera: .front),
+      maxSize: MaxSize(),
+      imageQuality: nil,
+      requestFullMetadata: false
+    ) { _ in }
     #expect(photo.authorizationStatusCallCount == 0)
   }
 
@@ -137,8 +132,8 @@ struct ImagePickerPluginTests {
     plugin.photoLibraryPermissionChecker = photo
     plugin.setImagePickerControllerOverrides([UIImagePickerController()])
     plugin.pickMultiImage(
-      with: FLTMaxSize(), quality: nil, fullMetadata: false, limit: nil
-    ) { _, _ in }
+      maxSize: MaxSize(), imageQuality: nil, requestFullMetadata: false, limit: nil
+    ) { _ in }
     #expect(photo.authorizationStatusCallCount == 0)
   }
 
@@ -148,13 +143,11 @@ struct ImagePickerPluginTests {
     plugin.photoLibraryPermissionChecker = photo
     plugin.setImagePickerControllerOverrides([UIImagePickerController()])
     plugin.pickMedia(
-      with: FLTMediaSelectionOptions.make(
-        with: FLTMaxSize(),
-        imageQuality: nil,
+      mediaSelectionOptions: MediaSelectionOptions(
+        maxSize: MaxSize(),
         requestFullMetadata: false,
-        allowMultiple: true,
-        limit: nil)
-    ) { _, _ in }
+        allowMultiple: true)
+    ) { _ in }
     #expect(photo.authorizationStatusCallCount == 0)
   }
 
@@ -164,13 +157,13 @@ struct ImagePickerPluginTests {
     }
     let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let controller = UIImagePickerController()
-    plugin.setImagePickerControllerOverrides([controller])
+    plugin.imagePickerControllerOverrides = [controller]
     plugin.pickImage(
-      withSource: FLTSourceSpecification.make(with: .camera, camera: .rear),
-      maxSize: FLTMaxSize(),
-      quality: nil,
-      fullMetadata: true
-    ) { _, _ in }
+      source: SourceSpecification(type: .camera, camera: .rear),
+      maxSize: MaxSize(),
+      imageQuality: nil,
+      requestFullMetadata: true
+    ) { _ in }
     plugin.imagePickerControllerDidCancel(controller)
     plugin.imagePickerControllerDidCancel(controller)
   }
@@ -192,11 +185,11 @@ struct ImagePickerPluginTests {
     let controller = RecordingImagePickerController()
     hostedPlugin.setImagePickerControllerOverrides([controller])
     hostedPlugin.pickImage(
-      withSource: FLTSourceSpecification.make(with: .camera, camera: .rear),
-      maxSize: FLTMaxSize(),
-      quality: nil,
-      fullMetadata: true
-    ) { _, _ in }
+      source: SourceSpecification(type: .camera, camera: .rear),
+      maxSize: MaxSize(),
+      imageQuality: nil,
+      requestFullMetadata: true
+    ) { _ in }
 
     #expect(hostedPlugin.interactionBlockerWindow != nil)
     #expect(hostedPlugin.previousKeyWindow === window)
@@ -214,15 +207,15 @@ struct ImagePickerPluginTests {
     let controller = RecordingImagePickerController()
     plugin.setImagePickerControllerOverrides([controller])
     plugin.pickVideo(
-      withSource: FLTSourceSpecification.make(with: .camera, camera: .rear),
-      maxDuration: 95
-    ) { _, _ in }
+      source: SourceSpecification(type: .camera, camera: .rear),
+      maxDurationSeconds: 95
+    ) { _ in }
     #expect(controller.videoMaximumDuration == 95)
   }
 
   @Test func pickingMultiVideoWithDuration() {
     let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
-    plugin.pickMultiVideo(withMaxDuration: 95, limit: nil) { _, _ in }
+    plugin.pickMultiVideo(maxDurationSeconds: 95, limit: nil) { _ in }
     #expect(plugin.callContext?.maxDuration == 95)
   }
 
@@ -233,7 +226,7 @@ struct ImagePickerPluginTests {
         #expect(error?.code == "create_error")
         confirmed()
       }
-      plugin.sendCallResult(withSavedPathList: [NSNull()])
+      plugin.sendCallResult(withSavedPathList: [NSNull()] as NSArray)
     }
   }
 
@@ -242,7 +235,7 @@ struct ImagePickerPluginTests {
     let pathList = ["test"]
     await confirmation("result") { confirmed in
       plugin.callContext = ImagePickerMethodCallContext { result, _ in
-        #expect(result as? [String] == pathList)
+        #expect(result == pathList)
         confirmed()
       }
       plugin.sendCallResult(withSavedPathList: pathList as NSArray)
@@ -253,7 +246,7 @@ struct ImagePickerPluginTests {
     let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     await confirmation("result") { confirmed in
       plugin.callContext = ImagePickerMethodCallContext { result, _ in
-        #expect(result as? [String] == [])
+        #expect(result == [])
         confirmed()
       }
       plugin.sendCallResult(withSavedPathList: [] as NSArray)
@@ -264,7 +257,7 @@ struct ImagePickerPluginTests {
     let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     await confirmation("result") { confirmed in
       plugin.callContext = ImagePickerMethodCallContext { result, _ in
-        #expect(result as? [String] == [])
+        #expect(result == [])
         confirmed()
       }
       plugin.sendCallResult(withSavedPathList: nil)
@@ -276,7 +269,7 @@ struct ImagePickerPluginTests {
     let pathList = ["test"]
     await confirmation("result") { confirmed in
       plugin.callContext = ImagePickerMethodCallContext { result, _ in
-        #expect(result as? [String] == pathList)
+        #expect(result == pathList)
         confirmed()
       }
       plugin.sendCallResult(withSavedPathList: pathList as NSArray)
@@ -296,7 +289,7 @@ struct ImagePickerPluginTests {
           confirmed()
           continuation.resume()
         }
-        plugin.processPickerItems([failItem, failItem], fromPicker: picker)
+        plugin.processPickerResults([failItem, failItem], from: picker)
       }
     }
   }
@@ -320,7 +313,7 @@ struct ImagePickerPluginTests {
           confirmed()
           continuation.resume()
         }
-        plugin.processPickerItems([failItem, tiffItem], fromPicker: picker)
+        plugin.processPickerResults([failItem, tiffItem], from: picker)
       }
     }
   }
@@ -345,7 +338,7 @@ struct ImagePickerPluginTests {
           confirmed()
           continuation.resume()
         }
-        plugin.processPickerItems([tiffItem, pngItem], fromPicker: picker)
+        plugin.processPickerResults([tiffItem, pngItem], from: picker)
       }
     }
   }
@@ -356,11 +349,11 @@ struct ImagePickerPluginTests {
     photo.status = .notDetermined
     plugin.photoLibraryPermissionChecker = photo
     plugin.pickImage(
-      withSource: FLTSourceSpecification.make(with: .gallery, camera: .front),
-      maxSize: FLTMaxSize(),
-      quality: nil,
-      fullMetadata: true
-    ) { _, _ in }
+      source: SourceSpecification(type: .gallery, camera: .front),
+      maxSize: MaxSize(),
+      imageQuality: nil,
+      requestFullMetadata: true
+    ) { _ in }
     #expect(photo.requestAuthorizationCallCount == 0)
   }
 
@@ -368,33 +361,40 @@ struct ImagePickerPluginTests {
     let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     await confirmation("first call") { confirmed in
       plugin.pickMultiImage(
-        with: FLTMaxSize.make(withWidth: 100, height: 100), quality: nil, fullMetadata: true,
+        maxSize: MaxSize(width: 100, height: 100), imageQuality: nil, requestFullMetadata: true,
         limit: nil
-      ) { _, error in
-        #expect(error?.code == "multiple_request")
+      ) { result in
+        guard case .failure(let error as PigeonError) = result else {
+          Issue.record("Expected multiple_request error")
+          return
+        }
+        #expect(error.code == "multiple_request")
         confirmed()
       }
       plugin.pickMultiImage(
-        with: FLTMaxSize.make(withWidth: 100, height: 100), quality: nil, fullMetadata: true,
+        maxSize: MaxSize(width: 100, height: 100), imageQuality: nil, requestFullMetadata: true,
         limit: nil
-      ) { _, _ in }
+      ) { _ in }
     }
   }
 
   @Test func pickMediaDuplicateCallCancels() async {
     let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
-    let options = FLTMediaSelectionOptions.make(
-      with: FLTMaxSize.make(withWidth: 100, height: 200),
+    let options = MediaSelectionOptions(
+      maxSize: MaxSize(width: 100, height: 200),
       imageQuality: 50,
       requestFullMetadata: true,
-      allowMultiple: true,
-      limit: nil)
+      allowMultiple: true)
     await confirmation("first call") { confirmed in
-      plugin.pickMedia(with: options) { _, error in
-        #expect(error?.code == "multiple_request")
+      plugin.pickMedia(mediaSelectionOptions: options) { result in
+        guard case .failure(let error as PigeonError) = result else {
+          Issue.record("Expected multiple_request error")
+          return
+        }
+        #expect(error.code == "multiple_request")
         confirmed()
       }
-      plugin.pickMedia(with: options) { _, _ in }
+      plugin.pickMedia(mediaSelectionOptions: options) { _ in }
     }
   }
 
@@ -404,80 +404,80 @@ struct ImagePickerPluginTests {
     permissions.status = .notDetermined
     permissions.completesRequestAccess = false
     plugin.cameraPermissionChecker = permissions
-    let source = FLTSourceSpecification.make(with: .camera, camera: .rear)
+    let source = SourceSpecification(type: .camera, camera: .rear)
     await confirmation("first call") { confirmed in
-      plugin.pickVideo(withSource: source, maxDuration: nil) { _, error in
-        #expect(error?.code == "multiple_request")
+      plugin.pickVideo(source: source, maxDurationSeconds: nil) { result in
+        guard case .failure(let error as PigeonError) = result else {
+          Issue.record("Expected multiple_request error")
+          return
+        }
+        #expect(error.code == "multiple_request")
         confirmed()
       }
-      plugin.pickVideo(withSource: source, maxDuration: nil) { _, _ in }
+      plugin.pickVideo(source: source, maxDurationSeconds: nil) { _ in }
     }
   }
 
   @Test func pickMultiImageWithLimit() {
     let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     plugin.pickMultiImage(
-      with: FLTMaxSize(), quality: nil, fullMetadata: false, limit: 2
-    ) { _, _ in }
+      maxSize: MaxSize(), imageQuality: nil, requestFullMetadata: false, limit: 2
+    ) { _ in }
     #expect(plugin.callContext?.maxItemCount == 2)
   }
 
   @Test func pickMediaWithLimitAllowsMultiple() {
     let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     plugin.pickMedia(
-      with: FLTMediaSelectionOptions.make(
-        with: FLTMaxSize.make(withWidth: 100, height: 200),
-        imageQuality: nil,
+      mediaSelectionOptions: MediaSelectionOptions(
+        maxSize: MaxSize(width: 100, height: 200),
         requestFullMetadata: false,
         allowMultiple: true,
         limit: 2)
-    ) { _, _ in }
+    ) { _ in }
     #expect(plugin.callContext?.maxItemCount == 2)
   }
 
   @Test func pickMediaWithLimitMultipleNotAllowed() {
     let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     plugin.pickMedia(
-      with: FLTMediaSelectionOptions.make(
-        with: FLTMaxSize.make(withWidth: 100, height: 200),
-        imageQuality: nil,
+      mediaSelectionOptions: MediaSelectionOptions(
+        maxSize: MaxSize(width: 100, height: 200),
         requestFullMetadata: false,
         allowMultiple: false,
         limit: 2)
-    ) { _, _ in }
+    ) { _ in }
     #expect(plugin.callContext?.maxItemCount == 1)
   }
 
   @Test func pickMultiImageWithoutLimit() {
     let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     plugin.pickMultiImage(
-      with: FLTMaxSize(), quality: nil, fullMetadata: false, limit: nil
-    ) { _, _ in }
+      maxSize: MaxSize(), imageQuality: nil, requestFullMetadata: false, limit: nil
+    ) { _ in }
     #expect(plugin.callContext?.maxItemCount == 0)
   }
 
   @Test func pickMediaWithoutLimitAllowsMultiple() {
     let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     plugin.pickMedia(
-      with: FLTMediaSelectionOptions.make(
-        with: FLTMaxSize.make(withWidth: 100, height: 200),
-        imageQuality: nil,
+      mediaSelectionOptions: MediaSelectionOptions(
+        maxSize: MaxSize(width: 100, height: 200),
         requestFullMetadata: false,
-        allowMultiple: true,
-        limit: nil)
-    ) { _, _ in }
+        allowMultiple: true)
+    ) { _ in }
     #expect(plugin.callContext?.maxItemCount == 0)
   }
 
   @Test func pickMultiVideoWithLimit() {
     let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
-    plugin.pickMultiVideo(withMaxDuration: nil, limit: 2) { _, _ in }
+    plugin.pickMultiVideo(maxDurationSeconds: nil, limit: 2) { _ in }
     #expect(plugin.callContext?.maxItemCount == 2)
   }
 
   @Test func pickMultiVideoWithoutLimit() {
     let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
-    plugin.pickMultiVideo(withMaxDuration: nil, limit: nil) { _, _ in }
+    plugin.pickMultiVideo(maxDurationSeconds: nil, limit: nil) { _ in }
     #expect(plugin.callContext?.maxItemCount == 0)
   }
 
@@ -487,9 +487,9 @@ struct ImagePickerPluginTests {
       viewProvider: StubViewProvider(viewController: UIViewController()))
     plugin.phPickerCreator = creator
     plugin.pickVideo(
-      withSource: FLTSourceSpecification.make(with: .gallery, camera: .rear),
-      maxDuration: nil
-    ) { _, _ in }
+      source: SourceSpecification(type: .gallery, camera: .rear),
+      maxDurationSeconds: nil
+    ) { _ in }
     #expect(
       creator.lastConfiguration?.preferredAssetRepresentationMode == .current)
   }
@@ -499,17 +499,24 @@ struct ImagePickerPluginTests {
     var completionCount = 0
     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
       plugin.pickImage(
-        withSource: FLTSourceSpecification.make(with: .gallery, camera: .rear),
-        maxSize: FLTMaxSize(),
-        quality: nil,
-        fullMetadata: false
-      ) { result, error in
+        source: SourceSpecification(type: .gallery, camera: .rear),
+        maxSize: MaxSize(),
+        imageQuality: nil,
+        requestFullMetadata: false
+      ) { result in
         completionCount += 1
         if completionCount == 1 {
-          #expect(result == nil)
-          #expect(error?.code == "invalid_result")
+          guard case .failure(let error as PigeonError) = result else {
+            Issue.record("Expected invalid_result")
+            return
+          }
+          #expect(error.code == "invalid_result")
         } else {
-          #expect(result == "a")
+          guard case .success(let path) = result else {
+            Issue.record("Expected first path")
+            return
+          }
+          #expect(path == "a")
           continuation.resume()
         }
       }
@@ -523,15 +530,22 @@ struct ImagePickerPluginTests {
     var completionCount = 0
     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
       plugin.pickVideo(
-        withSource: FLTSourceSpecification.make(with: .gallery, camera: .rear),
-        maxDuration: nil
-      ) { result, error in
+        source: SourceSpecification(type: .gallery, camera: .rear),
+        maxDurationSeconds: nil
+      ) { result in
         completionCount += 1
         if completionCount == 1 {
-          #expect(result == nil)
-          #expect(error?.code == "invalid_result")
+          guard case .failure(let error as PigeonError) = result else {
+            Issue.record("Expected invalid_result")
+            return
+          }
+          #expect(error.code == "invalid_result")
         } else {
-          #expect(result == "a")
+          guard case .success(let path) = result else {
+            Issue.record("Expected first path")
+            return
+          }
+          #expect(path == "a")
           continuation.resume()
         }
       }
@@ -592,12 +606,16 @@ struct ImagePickerPluginTests {
     plugin.setImagePickerControllerOverrides([UIImagePickerController()])
     await confirmation("denied") { confirmed in
       plugin.pickImage(
-        withSource: FLTSourceSpecification.make(with: .camera, camera: .rear),
-        maxSize: FLTMaxSize(),
-        quality: nil,
-        fullMetadata: true
-      ) { _, error in
-        #expect(error?.code == "camera_access_denied")
+        source: SourceSpecification(type: .camera, camera: .rear),
+        maxSize: MaxSize(),
+        imageQuality: nil,
+        requestFullMetadata: true
+      ) { result in
+        guard case .failure(let error as PigeonError) = result else {
+          Issue.record("Expected camera_access_denied")
+          return
+        }
+        #expect(error.code == "camera_access_denied")
         confirmed()
       }
     }
@@ -611,12 +629,16 @@ struct ImagePickerPluginTests {
     plugin.setImagePickerControllerOverrides([UIImagePickerController()])
     await confirmation("restricted") { confirmed in
       plugin.pickImage(
-        withSource: FLTSourceSpecification.make(with: .camera, camera: .rear),
-        maxSize: FLTMaxSize(),
-        quality: nil,
-        fullMetadata: true
-      ) { _, error in
-        #expect(error?.code == "camera_access_restricted")
+        source: SourceSpecification(type: .camera, camera: .rear),
+        maxSize: MaxSize(),
+        imageQuality: nil,
+        requestFullMetadata: true
+      ) { result in
+        guard case .failure(let error as PigeonError) = result else {
+          Issue.record("Expected camera_access_restricted")
+          return
+        }
+        #expect(error.code == "camera_access_restricted")
         confirmed()
       }
     }
@@ -631,12 +653,16 @@ struct ImagePickerPluginTests {
     plugin.setImagePickerControllerOverrides([UIImagePickerController()])
     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
       plugin.pickImage(
-        withSource: FLTSourceSpecification.make(with: .camera, camera: .rear),
-        maxSize: FLTMaxSize(),
-        quality: nil,
-        fullMetadata: true
-      ) { _, error in
-        #expect(error?.code == "camera_access_denied")
+        source: SourceSpecification(type: .camera, camera: .rear),
+        maxSize: MaxSize(),
+        imageQuality: nil,
+        requestFullMetadata: true
+      ) { result in
+        guard case .failure(let error as PigeonError) = result else {
+          Issue.record("Expected camera_access_denied")
+          return
+        }
+        #expect(error.code == "camera_access_denied")
         continuation.resume()
       }
     }
@@ -651,11 +677,11 @@ struct ImagePickerPluginTests {
     let controller = RecordingImagePickerController()
     plugin.setImagePickerControllerOverrides([controller])
     plugin.pickImage(
-      withSource: FLTSourceSpecification.make(with: .camera, camera: .rear),
-      maxSize: FLTMaxSize(),
-      quality: nil,
-      fullMetadata: true
-    ) { _, _ in }
+      source: SourceSpecification(type: .camera, camera: .rear),
+      maxSize: MaxSize(),
+      imageQuality: nil,
+      requestFullMetadata: true
+    ) { _ in }
     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
       DispatchQueue.main.async {
         #expect(controller.sourceType == .camera)
@@ -675,13 +701,16 @@ struct ImagePickerPluginTests {
     plugin.setImagePickerControllerOverrides([UIImagePickerController()])
     await confirmation("unavailable") { confirmed in
       plugin.pickImage(
-        withSource: FLTSourceSpecification.make(with: .camera, camera: .rear),
-        maxSize: FLTMaxSize(),
-        quality: nil,
-        fullMetadata: true
-      ) { result, error in
-        #expect(result == nil)
-        #expect(error == nil)
+        source: SourceSpecification(type: .camera, camera: .rear),
+        maxSize: MaxSize(),
+        imageQuality: nil,
+        requestFullMetadata: true
+      ) { result in
+        guard case .success(let path) = result else {
+          Issue.record("Expected cancelled nil path")
+          return
+        }
+        #expect(path == nil)
         confirmed()
       }
     }
@@ -704,12 +733,16 @@ struct ImagePickerPluginTests {
     plugin.setImagePickerControllerOverrides([UIImagePickerController()])
     await confirmation("unknown denied") { confirmed in
       plugin.pickImage(
-        withSource: FLTSourceSpecification.make(with: .camera, camera: .rear),
-        maxSize: FLTMaxSize(),
-        quality: nil,
-        fullMetadata: true
-      ) { _, error in
-        #expect(error?.code == "camera_access_denied")
+        source: SourceSpecification(type: .camera, camera: .rear),
+        maxSize: MaxSize(),
+        imageQuality: nil,
+        requestFullMetadata: true
+      ) { result in
+        guard case .failure(let error as PigeonError) = result else {
+          Issue.record("Expected camera_access_denied")
+          return
+        }
+        #expect(error.code == "camera_access_denied")
         confirmed()
       }
     }
@@ -727,13 +760,16 @@ struct ImagePickerPluginTests {
     plugin.setImagePickerControllerOverrides([UIImagePickerController()])
     await confirmation("unavailable") { confirmed in
       plugin.pickImage(
-        withSource: FLTSourceSpecification.make(with: .camera, camera: .rear),
-        maxSize: FLTMaxSize(),
-        quality: nil,
-        fullMetadata: true
-      ) { result, error in
-        #expect(result == nil)
-        #expect(error == nil)
+        source: SourceSpecification(type: .camera, camera: .rear),
+        maxSize: MaxSize(),
+        imageQuality: nil,
+        requestFullMetadata: true
+      ) { result in
+        guard case .success(let path) = result else {
+          Issue.record("Expected cancelled nil path")
+          return
+        }
+        #expect(path == nil)
         confirmed()
       }
     }
@@ -786,7 +822,7 @@ struct ImagePickerPluginTests {
     context.includeImages = true
     context.requestFullMetadata = false
     plugin.launchUIImagePicker(
-      with: FLTSourceSpecification.make(with: .gallery, camera: .rear), context: context)
+      with: SourceSpecification(type: .gallery, camera: .rear), context: context)
     #expect(controller.sourceType == .photoLibrary)
     #expect(photo.authorizationStatusCallCount == 0)
   }
@@ -810,7 +846,7 @@ struct ImagePickerPluginTests {
     context.includeImages = true
     context.requestFullMetadata = true
     plugin.launchUIImagePicker(
-      with: FLTSourceSpecification.make(with: .gallery, camera: .rear), context: context)
+      with: SourceSpecification(type: .gallery, camera: .rear), context: context)
     #expect(controller.sourceType == .photoLibrary)
   }
 
@@ -826,7 +862,7 @@ struct ImagePickerPluginTests {
     context.includeImages = true
     context.requestFullMetadata = true
     plugin.launchUIImagePicker(
-      with: FLTSourceSpecification.make(with: .gallery, camera: .rear), context: context)
+      with: SourceSpecification(type: .gallery, camera: .rear), context: context)
     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
       DispatchQueue.main.async {
         #expect(controller.sourceType == .photoLibrary)
@@ -850,7 +886,7 @@ struct ImagePickerPluginTests {
       context.includeImages = true
       context.requestFullMetadata = true
       plugin.launchUIImagePicker(
-        with: FLTSourceSpecification.make(with: .gallery, camera: .rear), context: context)
+        with: SourceSpecification(type: .gallery, camera: .rear), context: context)
     }
   }
 
@@ -860,21 +896,6 @@ struct ImagePickerPluginTests {
 
   @Test func photoAccessUnknownStatusTreatedAsDenied() async {
     await expectPhotoAccessError(PHAuthorizationStatus(rawValue: 999)!, code: "photo_access_denied")
-  }
-
-  @Test func launchUIImagePickerInvalidSourceReturnsError() async {
-    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
-    plugin.setImagePickerControllerOverrides([UIImagePickerController()])
-    await confirmation("invalid source") { confirmed in
-      let context = ImagePickerMethodCallContext { _, error in
-        #expect(error?.code == "invalid_source")
-        confirmed()
-      }
-      context.includeImages = true
-      let source = FLTSourceSpecification.make(with: .gallery, camera: .rear)
-      source.type = FLTSourceType(rawValue: 99)!
-      plugin.launchUIImagePicker(with: source, context: context)
-    }
   }
 
   @Test func launchUIImagePickerSetsImageAndVideoMediaTypes() {
@@ -889,7 +910,7 @@ struct ImagePickerPluginTests {
     context.includeVideo = true
     context.maxDuration = 42
     plugin.launchUIImagePicker(
-      with: FLTSourceSpecification.make(with: .camera, camera: .rear), context: context)
+      with: SourceSpecification(type: .camera, camera: .rear), context: context)
     #expect(controller.videoMaximumDuration == 42)
     #expect(controller.videoQuality == .typeHigh)
     #expect(controller.mediaTypes.contains(UTType.image.identifier))
@@ -905,7 +926,7 @@ struct ImagePickerPluginTests {
         #expect(FileManager.default.fileExists(atPath: result?.first ?? ""))
         continuation.resume()
       }
-      plugin.callContext?.maxSize = FLTMaxSize()
+      plugin.callContext?.maxSize = MaxSize()
       plugin.callContext?.requestFullMetadata = false
       plugin.imagePickerController(
         UIImagePickerController(),
@@ -922,7 +943,7 @@ struct ImagePickerPluginTests {
         #expect(result?.count == 1)
         continuation.resume()
       }
-      plugin.callContext?.maxSize = FLTMaxSize()
+      plugin.callContext?.maxSize = MaxSize()
       plugin.callContext?.requestFullMetadata = false
       plugin.imagePickerController(
         UIImagePickerController(),
@@ -944,7 +965,7 @@ struct ImagePickerPluginTests {
         #expect(saved?.size.height == 2)
         continuation.resume()
       }
-      plugin.callContext?.maxSize = FLTMaxSize.make(withWidth: 3, height: 2)
+      plugin.callContext?.maxSize = MaxSize(width: 3, height: 2)
       plugin.callContext?.requestFullMetadata = false
       plugin.imagePickerController(
         UIImagePickerController(),
@@ -960,7 +981,7 @@ struct ImagePickerPluginTests {
         #expect(result?.count == 1)
         continuation.resume()
       }
-      plugin.callContext?.maxSize = FLTMaxSize()
+      plugin.callContext?.maxSize = MaxSize()
       plugin.callContext?.requestFullMetadata = true
       plugin.imagePickerController(
         UIImagePickerController(),
@@ -1025,7 +1046,7 @@ struct ImagePickerPluginTests {
       context.includeImages = true
       context.requestFullMetadata = true
       plugin.launchUIImagePicker(
-        with: FLTSourceSpecification.make(with: .gallery, camera: .rear), context: context)
+        with: SourceSpecification(type: .gallery, camera: .rear), context: context)
     }
   }
 }

@@ -7,7 +7,7 @@ import PhotosUI
 import UniformTypeIdentifiers
 
 /// Returns either the saved path, or an error. Both cannot be set.
-typealias GetSavedPath = (String?, FlutterError?) -> Void
+typealias GetSavedPath = (String?, PigeonError?) -> Void
 
 /// Saves a PHPicker result to a temporary path on a background operation queue.
 @available(iOS 14, *)
@@ -63,7 +63,7 @@ final class PHPickerSaveImageToPathOperation: Operation, @unchecked Sendable {
     didChangeValue(forKey: "isFinished")
   }
 
-  private func completeOperation(path savedPath: String?, error: FlutterError?) {
+  private func completeOperation(path savedPath: String?, error: PigeonError?) {
     getSavedPath(savedPath, error)
     setExecuting(false)
     setFinished(true)
@@ -82,7 +82,7 @@ final class PHPickerSaveImageToPathOperation: Operation, @unchecked Sendable {
         if let data {
           self.processImage(data)
         } else {
-          let flutterError = FlutterError(
+          let flutterError = PigeonError(
             code: "invalid_image",
             message: error?.localizedDescription,
             details: (error as NSError?)?.domain)
@@ -92,7 +92,7 @@ final class PHPickerSaveImageToPathOperation: Operation, @unchecked Sendable {
     } else if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
       processVideo()
     } else {
-      let flutterError = FlutterError(
+      let flutterError = PigeonError(
         code: "invalid_source",
         message: "Invalid media source.",
         details: nil)
@@ -123,7 +123,7 @@ final class PHPickerSaveImageToPathOperation: Operation, @unchecked Sendable {
     result.itemProvider.loadFileRepresentation(forTypeIdentifier: typeIdentifier ?? "") {
       videoURL, error in
       if let error {
-        let flutterError = FlutterError(
+        let flutterError = PigeonError(
           code: "invalid_image",
           message: error.localizedDescription,
           details: (error as NSError).domain)
@@ -136,7 +136,7 @@ final class PHPickerSaveImageToPathOperation: Operation, @unchecked Sendable {
       else {
         self.completeOperation(
           path: nil,
-          error: FlutterError(
+          error: PigeonError(
             code: "flutter_image_picker_copy_video_error",
             message: "Could not cache the video file.",
             details: nil))

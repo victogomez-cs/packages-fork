@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import Flutter
 import ImageIO
 import Testing
 import UIKit
@@ -30,7 +31,7 @@ struct PickerSaveImageToPathOperationTests {
   ///
   /// Swift Testing `confirmation` does not wait after its body returns, so
   /// async `NSOperation` work must be awaited with a continuation.
-  private func runUntilFinished(_ operation: FLTPHPickerSaveImageToPathOperation) async {
+  private func runUntilFinished(_ operation: PHPickerSaveImageToPathOperation) async {
     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
       let previous = operation.completionBlock
       operation.completionBlock = {
@@ -59,7 +60,7 @@ struct PickerSaveImageToPathOperationTests {
     nonisolated(unsafe) var savedError: FlutterError?
     try await confirmation("savedPathBlock called") { saved in
       let operation = try #require(
-        FLTPHPickerSaveImageToPathOperation(
+        PHPickerSaveImageToPathOperation(
           result: result,
           maxHeight: maxHeight,
           maxWidth: maxWidth,
@@ -196,7 +197,7 @@ struct PickerSaveImageToPathOperationTests {
   }
 
   @Test func initWithNilResultReturnsNil() {
-    let operation = FLTPHPickerSaveImageToPathOperation(
+    let operation = PHPickerSaveImageToPathOperation(
       result: nil,
       maxHeight: 100,
       maxWidth: 100,
@@ -210,7 +211,7 @@ struct PickerSaveImageToPathOperationTests {
     let result = try pickerItem(forResource: "pngImage", ext: "png")
     var savedPathCalled = false
     let operation = try #require(
-      FLTPHPickerSaveImageToPathOperation(
+      PHPickerSaveImageToPathOperation(
         result: result,
         maxHeight: 100,
         maxWidth: 100,

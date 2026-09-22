@@ -1,11 +1,6 @@
 ## 0.8.13+8
 
-* Adds injectable protocol seams for camera, photo library, PHPicker, and PHImageManager APIs.
-* Splits the iOS implementation into mixed-language Swift Package Manager targets.
-* Migrates the plugin class from Objective-C to Swift.
-* Migrates the view provider from Objective-C to Swift.
-* Migrates the PHPicker save operation from Objective-C to Swift.
-* Migrates image, metadata, and photo-asset utilities from Objective-C to Swift.
+* Migrates the platform implementation from Objective-C to Swift.
 * Updates minimum supported SDK version to Flutter 3.41/Dart 3.11.
 
 ## 0.8.13+7

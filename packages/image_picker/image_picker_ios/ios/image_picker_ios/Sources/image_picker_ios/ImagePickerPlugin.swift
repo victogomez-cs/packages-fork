@@ -67,7 +67,7 @@ public final class ImagePickerPlugin: NSObject, FlutterPlugin, FLTImagePickerApi
   var imagePickerControllerOverrides: [UIImagePickerController]?
 
   /// The view provider to use for displaying native view controllers.
-  let viewProvider: FIPViewProvider
+  let viewProvider: ViewProvider
 
   /// Camera source/device availability. Overridable for tests.
   var cameraAvailability: CameraAvailabilityChecking = DefaultCameraAvailability()
@@ -94,11 +94,11 @@ public final class ImagePickerPlugin: NSObject, FlutterPlugin, FLTImagePickerApi
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let instance = ImagePickerPlugin(
-      viewProvider: FIPDefaultViewProvider(registrar: registrar))
+      viewProvider: DefaultViewProvider(registrar: registrar))
     SetUpFLTImagePickerApi(registrar.messenger(), instance)
   }
 
-  init(viewProvider: FIPViewProvider) {
+  init(viewProvider: ViewProvider) {
     self.viewProvider = viewProvider
   }
 
@@ -516,7 +516,7 @@ public final class ImagePickerPlugin: NSObject, FlutterPlugin, FLTImagePickerApi
       pathList.add(NSNull())
       let index = pathList.count - 1
       guard
-        let saveOperation = FLTPHPickerSaveImageToPathOperation(
+        let saveOperation = PHPickerSaveImageToPathOperation(
           result: result,
           maxHeight: maxHeight,
           maxWidth: maxWidth,
@@ -551,7 +551,7 @@ public final class ImagePickerPlugin: NSObject, FlutterPlugin, FLTImagePickerApi
       return
     }
     if let videoURL {
-      guard let destination = FLTImagePickerPhotoAssetUtil.saveVideo(from: videoURL) else {
+      guard let destination = ImagePickerPhotoAssetUtil.saveVideo(from: videoURL) else {
         sendCallResult(
           with: FlutterError(
             code: "flutter_image_picker_copy_video_error",
@@ -572,14 +572,14 @@ public final class ImagePickerPlugin: NSObject, FlutterPlugin, FLTImagePickerApi
 
       var originalAsset: PHAsset?
       if callContext?.requestFullMetadata == true {
-        originalAsset = FLTImagePickerPhotoAssetUtil.getAssetFromImagePickerInfo(
-          info.reduce(into: [:]) { result, item in
+        originalAsset = ImagePickerPhotoAssetUtil.getAsset(
+          fromImagePickerInfo: info.reduce(into: [:]) { result, item in
             result[item.key.rawValue] = item.value
           })
       }
 
       if maxWidth != nil || maxHeight != nil {
-        image = FLTImagePickerImageUtil.scaledImage(
+        image = ImagePickerImageUtil.scaledImage(
           image, maxWidth: maxWidth, maxHeight: maxHeight, isMetadataAvailable: true)
       }
 
@@ -611,16 +611,16 @@ public final class ImagePickerPlugin: NSObject, FlutterPlugin, FLTImagePickerApi
     withOriginalImageData originalImageData: Data?, image: UIImage?, maxWidth: NSNumber?,
     maxHeight: NSNumber?, imageQuality: NSNumber?
   ) {
-    let savedPath = FLTImagePickerPhotoAssetUtil.saveImage(
-      withOriginalImageData: originalImageData, image: image ?? UIImage(),
-      maxWidth: maxWidth, maxHeight: maxHeight, imageQuality: imageQuality)
+    let savedPath = ImagePickerPhotoAssetUtil.saveImageWithOriginalImageData(
+      originalImageData, image: image, maxWidth: maxWidth, maxHeight: maxHeight,
+      imageQuality: imageQuality)
     sendCallResult(withSavedPathList: [savedPath] as NSArray)
   }
 
   func saveImage(
     withPickerInfo info: [String: Any]?, image: UIImage, imageQuality: NSNumber?
   ) {
-    let savedPath = FLTImagePickerPhotoAssetUtil.saveImage(
+    let savedPath = ImagePickerPhotoAssetUtil.saveImage(
       withPickerInfo: info, image: image, imageQuality: imageQuality)
     sendCallResult(withSavedPathList: [savedPath] as NSArray)
   }
@@ -705,19 +705,8 @@ public final class ImagePickerPlugin: NSObject, FlutterPlugin, FLTImagePickerApi
 }
 
 @available(iOS 14, *)
-private final class BridgedPickerItem: NSObject, PickerItem {
-  let itemProvider: NSItemProvider
-  let assetIdentifier: String?
-
-  init(_ result: PHPickerResult) {
-    self.itemProvider = result.itemProvider
-    self.assetIdentifier = result.assetIdentifier
-  }
-}
-
-@available(iOS 14, *)
 extension ImagePickerPlugin: PHPickerViewControllerDelegate {
   public func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-    processPickerItems(results.map { BridgedPickerItem($0) }, fromPicker: picker)
+    processPickerItems(results.map { $0 as PickerItem }, fromPicker: picker)
   }
 }

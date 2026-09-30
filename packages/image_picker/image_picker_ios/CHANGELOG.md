@@ -3,6 +3,9 @@
 * Adds an injectable protocol seam for PHImageManager image data requests.
 * Splits the iOS implementation into mixed-language Swift Package Manager targets.
 * Migrates the plugin class from Objective-C to Swift.
+* Migrates the view provider from Objective-C to Swift.
+* Migrates the PHPicker save operation from Objective-C to Swift.
+* Migrates image, metadata, and photo-asset utilities from Objective-C to Swift.
 
 ## 0.8.13+10
 

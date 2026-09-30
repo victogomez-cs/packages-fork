@@ -10,13 +10,17 @@ import UniformTypeIdentifiers
 
 @testable import image_picker_ios
 
+#if canImport(image_picker_ios_objc)
+  @testable import image_picker_ios_objc
+#endif
+
 @Suite
 @MainActor
 struct ImagePickerPluginTests {
   private func pluginWithAuthorizedCamera() -> (
-    FLTImagePickerPlugin, FakeCameraAvailability, FakeCameraPermissionChecker
+    ImagePickerPlugin, FakeCameraAvailability, FakeCameraPermissionChecker
   ) {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let camera = FakeCameraAvailability()
     camera.sourceTypeAvailable = true
     camera.cameraDeviceAvailable = true
@@ -79,7 +83,7 @@ struct ImagePickerPluginTests {
     if #available(iOS 14, *) {
       return
     }
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let photo = FakePhotoLibraryPermissionChecker()
     photo.status = .authorized
     plugin.photoLibraryPermissionChecker = photo
@@ -96,7 +100,7 @@ struct ImagePickerPluginTests {
     if #available(iOS 14, *) {
       return
     }
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let photo = FakePhotoLibraryPermissionChecker()
     photo.status = .authorized
     plugin.photoLibraryPermissionChecker = photo
@@ -114,7 +118,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pickImageWithoutFullMetadata() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let photo = FakePhotoLibraryPermissionChecker()
     plugin.photoLibraryPermissionChecker = photo
     plugin.setImagePickerControllerOverrides([UIImagePickerController()])
@@ -128,7 +132,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pickMultiImageWithoutFullMetadata() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let photo = FakePhotoLibraryPermissionChecker()
     plugin.photoLibraryPermissionChecker = photo
     plugin.setImagePickerControllerOverrides([UIImagePickerController()])
@@ -139,7 +143,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pickMediaWithoutFullMetadata() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let photo = FakePhotoLibraryPermissionChecker()
     plugin.photoLibraryPermissionChecker = photo
     plugin.setImagePickerControllerOverrides([UIImagePickerController()])
@@ -158,7 +162,7 @@ struct ImagePickerPluginTests {
     if UIImagePickerController.isSourceTypeAvailable(.camera) {
       return
     }
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let controller = UIImagePickerController()
     plugin.setImagePickerControllerOverrides([controller])
     plugin.pickImage(
@@ -182,7 +186,7 @@ struct ImagePickerPluginTests {
     window.makeKeyAndVisible()
 
     let viewProvider = StubViewProvider(viewController: rootViewController)
-    let hostedPlugin = FLTImagePickerPlugin(viewProvider: viewProvider)
+    let hostedPlugin = ImagePickerPlugin(viewProvider: viewProvider)
     hostedPlugin.cameraAvailability = camera
     hostedPlugin.cameraPermissionChecker = permissions
     let controller = RecordingImagePickerController()
@@ -206,7 +210,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pickingVideoWithDuration() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let controller = RecordingImagePickerController()
     plugin.setImagePickerControllerOverrides([controller])
     plugin.pickVideo(
@@ -217,15 +221,15 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pickingMultiVideoWithDuration() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     plugin.pickMultiVideo(withMaxDuration: 95, limit: nil) { _, _ in }
     #expect(plugin.callContext?.maxDuration == 95)
   }
 
   @Test func pluginMultiImagePathHasNullItem() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     await confirmation("result") { confirmed in
-      plugin.callContext = FLTImagePickerMethodCallContext { _, error in
+      plugin.callContext = ImagePickerMethodCallContext { _, error in
         #expect(error?.code == "create_error")
         confirmed()
       }
@@ -234,32 +238,32 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pluginMultiImagePathHasItem() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let pathList = ["test"]
     await confirmation("result") { confirmed in
-      plugin.callContext = FLTImagePickerMethodCallContext { result, _ in
+      plugin.callContext = ImagePickerMethodCallContext { result, _ in
         #expect(result as? [String] == pathList)
         confirmed()
       }
-      plugin.sendCallResult(withSavedPathList: pathList)
+      plugin.sendCallResult(withSavedPathList: pathList as NSArray)
     }
   }
 
   @Test func pluginMediaPathHasNoItem() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     await confirmation("result") { confirmed in
-      plugin.callContext = FLTImagePickerMethodCallContext { result, _ in
+      plugin.callContext = ImagePickerMethodCallContext { result, _ in
         #expect(result as? [String] == [])
         confirmed()
       }
-      plugin.sendCallResult(withSavedPathList: [])
+      plugin.sendCallResult(withSavedPathList: [] as NSArray)
     }
   }
 
   @Test func pluginMediaPathConvertsNilToEmptyList() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     await confirmation("result") { confirmed in
-      plugin.callContext = FLTImagePickerMethodCallContext { result, _ in
+      plugin.callContext = ImagePickerMethodCallContext { result, _ in
         #expect(result as? [String] == [])
         confirmed()
       }
@@ -268,14 +272,14 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pluginMediaPathHasItem() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let pathList = ["test"]
     await confirmation("result") { confirmed in
-      plugin.callContext = FLTImagePickerMethodCallContext { result, _ in
+      plugin.callContext = ImagePickerMethodCallContext { result, _ in
         #expect(result as? [String] == pathList)
         confirmed()
       }
-      plugin.sendCallResult(withSavedPathList: pathList)
+      plugin.sendCallResult(withSavedPathList: pathList as NSArray)
     }
   }
 
@@ -285,7 +289,7 @@ struct ImagePickerPluginTests {
   /// picker delivers results off the calling thread, so those expectations
   /// cannot fail `xcodebuild`. Capture here and assert after `confirmation`.
   private func processPickerItems(
-    _ items: [any PickerItem], using plugin: FLTImagePickerPlugin
+    _ items: [any PickerItem], using plugin: ImagePickerPlugin
   ) async -> (paths: [String]?, error: FlutterError?, onMainThread: Bool) {
     let picker = PHPickerViewController(configuration: PHPickerConfiguration())
     nonisolated(unsafe) var received: [String]?
@@ -293,7 +297,7 @@ struct ImagePickerPluginTests {
     nonisolated(unsafe) var onMainThread = false
     await confirmation("result") { confirmed in
       await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-        plugin.callContext = FLTImagePickerMethodCallContext { result, error in
+        plugin.callContext = ImagePickerMethodCallContext { result, error in
           onMainThread = Thread.isMainThread
           received = result
           receivedError = error
@@ -307,7 +311,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func sendsImageInvalidSourceError() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let failItem = FakePickerItem(itemProvider: NSItemProvider(), assetIdentifier: nil)
     let (paths, error, onMainThread) = await processPickerItems(
       [failItem, failItem], using: plugin)
@@ -324,7 +328,7 @@ struct ImagePickerPluginTests {
       ImagePickerTestImages.bundle.url(forResource: "tiffImage", withExtension: "tiff"))
     let tiffItem = FakePickerItem(
       itemProvider: NSItemProvider(contentsOf: tiffURL)!, assetIdentifier: nil)
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let (paths, error, onMainThread) = await processPickerItems(
       [failItem, tiffItem], using: plugin)
     #expect(onMainThread)
@@ -341,7 +345,7 @@ struct ImagePickerPluginTests {
       itemProvider: NSItemProvider(contentsOf: tiffURL)!, assetIdentifier: nil)
     let pngItem = FakePickerItem(
       itemProvider: NSItemProvider(contentsOf: pngURL)!, assetIdentifier: nil)
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let (paths, error, onMainThread) = await processPickerItems(
       [tiffItem, pngItem], using: plugin)
     #expect(onMainThread)
@@ -350,7 +354,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pickImageDoesntRequestAuthorization() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let photo = FakePhotoLibraryPermissionChecker()
     photo.status = .notDetermined
     plugin.photoLibraryPermissionChecker = photo
@@ -364,7 +368,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pickMultiImageDuplicateCallCancels() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     await confirmation("first call") { confirmed in
       plugin.pickMultiImage(
         with: FLTMaxSize.make(withWidth: 100, height: 100), quality: nil, fullMetadata: true,
@@ -381,7 +385,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pickMediaDuplicateCallCancels() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let options = FLTMediaSelectionOptions.make(
       with: FLTMaxSize.make(withWidth: 100, height: 200),
       imageQuality: 50,
@@ -398,7 +402,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pickVideoDuplicateCallCancels() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let permissions = FakeCameraPermissionChecker()
     permissions.status = .notDetermined
     permissions.completesRequestAccess = false
@@ -414,7 +418,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pickMultiImageWithLimit() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     plugin.pickMultiImage(
       with: FLTMaxSize(), quality: nil, fullMetadata: false, limit: 2
     ) { _, _ in }
@@ -422,7 +426,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pickMediaWithLimitAllowsMultiple() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     plugin.pickMedia(
       with: FLTMediaSelectionOptions.make(
         with: FLTMaxSize.make(withWidth: 100, height: 200),
@@ -435,7 +439,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pickMediaWithLimitMultipleNotAllowed() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     plugin.pickMedia(
       with: FLTMediaSelectionOptions.make(
         with: FLTMaxSize.make(withWidth: 100, height: 200),
@@ -448,7 +452,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pickMultiImageWithoutLimit() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     plugin.pickMultiImage(
       with: FLTMaxSize(), quality: nil, fullMetadata: false, limit: nil
     ) { _, _ in }
@@ -456,7 +460,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pickMediaWithoutLimitAllowsMultiple() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     plugin.pickMedia(
       with: FLTMediaSelectionOptions.make(
         with: FLTMaxSize.make(withWidth: 100, height: 200),
@@ -469,20 +473,20 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pickMultiVideoWithLimit() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     plugin.pickMultiVideo(withMaxDuration: nil, limit: 2) { _, _ in }
     #expect(plugin.callContext?.maxItemCount == 2)
   }
 
   @Test func pickMultiVideoWithoutLimit() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     plugin.pickMultiVideo(withMaxDuration: nil, limit: nil) { _, _ in }
     #expect(plugin.callContext?.maxItemCount == 0)
   }
 
   @Test func pickVideoSetsCurrentRepresentationMode() {
     let creator = RecordingPHPickerCreator()
-    let plugin = FLTImagePickerPlugin(
+    let plugin = ImagePickerPlugin(
       viewProvider: StubViewProvider(viewController: UIViewController()))
     plugin.phPickerCreator = creator
     plugin.pickVideo(
@@ -494,7 +498,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func pickImageInvalidResultWhenMultiplePathsReturned() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     var completionCount = 0
     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
       plugin.pickImage(
@@ -512,13 +516,13 @@ struct ImagePickerPluginTests {
           continuation.resume()
         }
       }
-      plugin.sendCallResult(withSavedPathList: ["a", "b"])
+      plugin.sendCallResult(withSavedPathList: ["a", "b"] as NSArray)
     }
     #expect(completionCount == 2)
   }
 
   @Test func pickVideoInvalidResultWhenMultiplePathsReturned() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     var completionCount = 0
     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
       plugin.pickVideo(
@@ -534,16 +538,16 @@ struct ImagePickerPluginTests {
           continuation.resume()
         }
       }
-      plugin.sendCallResult(withSavedPathList: ["a", "b"])
+      plugin.sendCallResult(withSavedPathList: ["a", "b"] as NSArray)
     }
     #expect(completionCount == 2)
   }
 
   @Test func phPickerCancelSendsEmptyPathList() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let picker = PHPickerViewController(configuration: PHPickerConfiguration())
     await confirmation("cancelled") { confirmed in
-      plugin.callContext = FLTImagePickerMethodCallContext { result, error in
+      plugin.callContext = ImagePickerMethodCallContext { result, error in
         #expect(result as? [String] == [])
         #expect(error == nil)
         confirmed()
@@ -553,13 +557,13 @@ struct ImagePickerPluginTests {
   }
 
   @Test func presentationControllerDidDismissSendsEmptyPathList() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let presented = UIViewController()
     let presenting = UIViewController()
     let presentationController = UIPresentationController(
       presentedViewController: presented, presenting: presenting)
     await confirmation("dismissed") { confirmed in
-      plugin.callContext = FLTImagePickerMethodCallContext { result, error in
+      plugin.callContext = ImagePickerMethodCallContext { result, error in
         #expect(result as? [String] == [])
         #expect(error == nil)
         confirmed()
@@ -569,22 +573,22 @@ struct ImagePickerPluginTests {
   }
 
   @Test func desiredImageQualityClampsOutOfRangeValues() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
-    #expect(abs(plugin.getDesiredImageQuality(-1).doubleValue - 1.0) < 0.0001)
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
+    #expect(abs(plugin.desiredImageQuality(-1).doubleValue - 1.0) < 0.0001)
   }
 
   @Test func desiredImageQualityScalesValidPercent() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
-    #expect(abs(plugin.getDesiredImageQuality(50).doubleValue - 0.5) < 0.0001)
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
+    #expect(abs(plugin.desiredImageQuality(50).doubleValue - 0.5) < 0.0001)
   }
 
   @Test func desiredImageQualityOver100IsClamped() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
-    #expect(abs(plugin.getDesiredImageQuality(150).doubleValue - 1.0) < 0.0001)
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
+    #expect(abs(plugin.desiredImageQuality(150).doubleValue - 1.0) < 0.0001)
   }
 
   @Test func cameraAccessDeniedReturnsError() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let permissions = FakeCameraPermissionChecker()
     permissions.status = .denied
     plugin.cameraPermissionChecker = permissions
@@ -603,7 +607,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func cameraAccessRestrictedReturnsError() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let permissions = FakeCameraPermissionChecker()
     permissions.status = .restricted
     plugin.cameraPermissionChecker = permissions
@@ -622,7 +626,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func cameraAccessNotDeterminedDenied() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let permissions = FakeCameraPermissionChecker()
     permissions.status = .notDetermined
     permissions.requestAccessGranted = false
@@ -664,7 +668,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func showCameraWhenUnavailableSendsNilPathList() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let camera = FakeCameraAvailability()
     camera.sourceTypeAvailable = false
     plugin.cameraAvailability = camera
@@ -687,16 +691,16 @@ struct ImagePickerPluginTests {
   }
 
   @Test func showCameraReturnsEarlyWhenAlreadyBeingPresented() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let picker = RecordingImagePickerController()
     picker.isBeingPresentedOverride = true
     let originalSource = picker.sourceType
-    plugin.showCamera(.rear, withImagePicker: picker)
+    plugin.showCamera(.rear, with: picker)
     #expect(picker.sourceType == originalSource)
   }
 
   @Test func cameraAccessUnknownStatusTreatedAsDenied() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let permissions = FakeCameraPermissionChecker()
     permissions.status = AVAuthorizationStatus(rawValue: 999)!
     plugin.cameraPermissionChecker = permissions
@@ -716,7 +720,7 @@ struct ImagePickerPluginTests {
 
   @Test func showCameraUnavailableAlertOKHandler() async {
     let host = RecordingViewController()
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider(viewController: host))
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider(viewController: host))
     let camera = FakeCameraAvailability()
     camera.sourceTypeAvailable = false
     plugin.cameraAvailability = camera
@@ -747,7 +751,7 @@ struct ImagePickerPluginTests {
 
   @Test func presentingViewControllerWithoutWindowReturnsHostController() {
     let host = UIViewController()
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider(viewController: host))
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider(viewController: host))
     #expect(plugin.presentingViewControllerForImagePickerInNewWindow() === host)
   }
 
@@ -756,7 +760,7 @@ struct ImagePickerPluginTests {
     let rootViewController = UIViewController()
     window.rootViewController = rootViewController
     rootViewController.loadViewIfNeeded()
-    let plugin = FLTImagePickerPlugin(
+    let plugin = ImagePickerPlugin(
       viewProvider: StubViewProvider(viewController: rootViewController))
     let first = plugin.presentingViewControllerForImagePickerInNewWindow()
     let second = plugin.presentingViewControllerForImagePickerInNewWindow()
@@ -769,23 +773,23 @@ struct ImagePickerPluginTests {
     let rootViewController = UIViewController()
     window.rootViewController = rootViewController
     rootViewController.loadViewIfNeeded()
-    let plugin = FLTImagePickerPlugin(
+    let plugin = ImagePickerPlugin(
       viewProvider: StubViewProvider(viewController: rootViewController))
     #expect(plugin.presentingViewControllerForImagePickerInNewWindow() != nil)
     plugin.removeInteractionBlocker()
   }
 
   @Test func launchUIImagePickerGalleryWithoutFullMetadataSkipsAuthorization() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let photo = FakePhotoLibraryPermissionChecker()
     plugin.photoLibraryPermissionChecker = photo
     let controller = UIImagePickerController()
     plugin.setImagePickerControllerOverrides([controller])
-    let context = FLTImagePickerMethodCallContext { _, _ in }
+    let context = ImagePickerMethodCallContext { _, _ in }
     context.includeImages = true
     context.requestFullMetadata = false
     plugin.launchUIImagePicker(
-      withSource: FLTSourceSpecification.make(with: .gallery, camera: .rear), context: context)
+      with: FLTSourceSpecification.make(with: .gallery, camera: .rear), context: context)
     #expect(controller.sourceType == .photoLibrary)
     #expect(photo.authorizationStatusCallCount == 0)
   }
@@ -799,33 +803,33 @@ struct ImagePickerPluginTests {
   }
 
   @Test func photoAccessAuthorizedShowsLibrary() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let photo = FakePhotoLibraryPermissionChecker()
     photo.status = .authorized
     plugin.photoLibraryPermissionChecker = photo
     let controller = UIImagePickerController()
     plugin.setImagePickerControllerOverrides([controller])
-    let context = FLTImagePickerMethodCallContext { _, _ in }
+    let context = ImagePickerMethodCallContext { _, _ in }
     context.includeImages = true
     context.requestFullMetadata = true
     plugin.launchUIImagePicker(
-      withSource: FLTSourceSpecification.make(with: .gallery, camera: .rear), context: context)
+      with: FLTSourceSpecification.make(with: .gallery, camera: .rear), context: context)
     #expect(controller.sourceType == .photoLibrary)
   }
 
   @Test func photoAccessNotDeterminedGrantedShowsLibrary() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let photo = FakePhotoLibraryPermissionChecker()
     photo.status = .notDetermined
     photo.requestAuthorizationResult = .authorized
     plugin.photoLibraryPermissionChecker = photo
     let controller = UIImagePickerController()
     plugin.setImagePickerControllerOverrides([controller])
-    let context = FLTImagePickerMethodCallContext { _, _ in }
+    let context = ImagePickerMethodCallContext { _, _ in }
     context.includeImages = true
     context.requestFullMetadata = true
     plugin.launchUIImagePicker(
-      withSource: FLTSourceSpecification.make(with: .gallery, camera: .rear), context: context)
+      with: FLTSourceSpecification.make(with: .gallery, camera: .rear), context: context)
     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
       DispatchQueue.main.async {
         #expect(controller.sourceType == .photoLibrary)
@@ -835,21 +839,21 @@ struct ImagePickerPluginTests {
   }
 
   @Test func photoAccessNotDeterminedDeniedReturnsError() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let photo = FakePhotoLibraryPermissionChecker()
     photo.status = .notDetermined
     photo.requestAuthorizationResult = .denied
     plugin.photoLibraryPermissionChecker = photo
     plugin.setImagePickerControllerOverrides([UIImagePickerController()])
     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-      let context = FLTImagePickerMethodCallContext { _, error in
+      let context = ImagePickerMethodCallContext { _, error in
         #expect(error?.code == "photo_access_denied")
         continuation.resume()
       }
       context.includeImages = true
       context.requestFullMetadata = true
       plugin.launchUIImagePicker(
-        withSource: FLTSourceSpecification.make(with: .gallery, camera: .rear), context: context)
+        with: FLTSourceSpecification.make(with: .gallery, camera: .rear), context: context)
     }
   }
 
@@ -862,33 +866,33 @@ struct ImagePickerPluginTests {
   }
 
   @Test func launchUIImagePickerInvalidSourceReturnsError() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     plugin.setImagePickerControllerOverrides([UIImagePickerController()])
     await confirmation("invalid source") { confirmed in
-      let context = FLTImagePickerMethodCallContext { _, error in
+      let context = ImagePickerMethodCallContext { _, error in
         #expect(error?.code == "invalid_source")
         confirmed()
       }
       context.includeImages = true
       let source = FLTSourceSpecification.make(with: .gallery, camera: .rear)
       source.type = FLTSourceType(rawValue: 99)!
-      plugin.launchUIImagePicker(withSource: source, context: context)
+      plugin.launchUIImagePicker(with: source, context: context)
     }
   }
 
   @Test func launchUIImagePickerSetsImageAndVideoMediaTypes() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let permissions = FakeCameraPermissionChecker()
     permissions.status = .denied
     plugin.cameraPermissionChecker = permissions
     let controller = UIImagePickerController()
     plugin.setImagePickerControllerOverrides([controller])
-    let context = FLTImagePickerMethodCallContext { _, _ in }
+    let context = ImagePickerMethodCallContext { _, _ in }
     context.includeImages = true
     context.includeVideo = true
     context.maxDuration = 42
     plugin.launchUIImagePicker(
-      withSource: FLTSourceSpecification.make(with: .camera, camera: .rear), context: context)
+      with: FLTSourceSpecification.make(with: .camera, camera: .rear), context: context)
     #expect(controller.videoMaximumDuration == 42)
     #expect(controller.videoQuality == .typeHigh)
     #expect(controller.mediaTypes.contains(UTType.image.identifier))
@@ -896,10 +900,10 @@ struct ImagePickerPluginTests {
   }
 
   @Test func imagePickerDidFinishPickingOriginalImage() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let image = UIImage(data: ImagePickerTestImages.jpgTestData)!
     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-      plugin.callContext = FLTImagePickerMethodCallContext { result, _ in
+      plugin.callContext = ImagePickerMethodCallContext { result, _ in
         #expect(result?.count == 1)
         #expect(FileManager.default.fileExists(atPath: result?.first ?? ""))
         continuation.resume()
@@ -913,11 +917,11 @@ struct ImagePickerPluginTests {
   }
 
   @Test func imagePickerDidFinishPickingPrefersEditedImage() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let original = UIImage(data: ImagePickerTestImages.jpgTestData)!
     let edited = UIImage(data: ImagePickerTestImages.pngTestData)!
     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-      plugin.callContext = FLTImagePickerMethodCallContext { result, _ in
+      plugin.callContext = ImagePickerMethodCallContext { result, _ in
         #expect(result?.count == 1)
         continuation.resume()
       }
@@ -933,10 +937,10 @@ struct ImagePickerPluginTests {
   }
 
   @Test func imagePickerDidFinishPickingScalesImage() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let image = UIImage(data: ImagePickerTestImages.jpgTestData)!
     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-      plugin.callContext = FLTImagePickerMethodCallContext { result, _ in
+      plugin.callContext = ImagePickerMethodCallContext { result, _ in
         #expect(result?.count == 1)
         let saved = UIImage(contentsOfFile: result?.first ?? "")
         #expect(saved?.size.width == 3)
@@ -952,10 +956,10 @@ struct ImagePickerPluginTests {
   }
 
   @Test func imagePickerDidFinishPickingFullMetadataWithoutAsset() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let image = UIImage(data: ImagePickerTestImages.jpgTestData)!
     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-      plugin.callContext = FLTImagePickerMethodCallContext { result, _ in
+      plugin.callContext = ImagePickerMethodCallContext { result, _ in
         #expect(result?.count == 1)
         continuation.resume()
       }
@@ -968,7 +972,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func imagePickerDidFinishPickingWithFullMetadataAsset() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let requester = FakeImageDataRequester()
     requester.imageData = ImagePickerTestImages.jpgTestData
     plugin.imageDataRequester = requester
@@ -976,7 +980,7 @@ struct ImagePickerPluginTests {
     let asset = PHAsset()
     nonisolated(unsafe) var received: [String]?
     await confirmation("result") { confirmed in
-      plugin.callContext = FLTImagePickerMethodCallContext { result, _ in
+      plugin.callContext = ImagePickerMethodCallContext { result, _ in
         received = result
         confirmed()
       }
@@ -1007,9 +1011,9 @@ struct ImagePickerPluginTests {
     #expect(
       FileManager.default.createFile(
         atPath: sourcePath, contents: Data("video".utf8), attributes: nil))
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-      plugin.callContext = FLTImagePickerMethodCallContext { result, _ in
+      plugin.callContext = ImagePickerMethodCallContext { result, _ in
         #expect(result?.count == 1)
         #expect(FileManager.default.fileExists(atPath: result?.first ?? ""))
         continuation.resume()
@@ -1022,9 +1026,9 @@ struct ImagePickerPluginTests {
   }
 
   @Test func imagePickerDidFinishPickingVideoCopyFailure() async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-      plugin.callContext = FLTImagePickerMethodCallContext { _, error in
+      plugin.callContext = ImagePickerMethodCallContext { _, error in
         #expect(error?.code == "flutter_image_picker_copy_video_error")
         continuation.resume()
       }
@@ -1037,7 +1041,7 @@ struct ImagePickerPluginTests {
   }
 
   @Test func imagePickerDidFinishPickingIgnoredWhenNoCallContext() {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let image = UIImage(data: ImagePickerTestImages.jpgTestData)!
     plugin.imagePickerController(
       UIImagePickerController(),
@@ -1045,20 +1049,20 @@ struct ImagePickerPluginTests {
   }
 
   private func expectPhotoAccessError(_ status: PHAuthorizationStatus, code: String) async {
-    let plugin = FLTImagePickerPlugin(viewProvider: StubViewProvider())
+    let plugin = ImagePickerPlugin(viewProvider: StubViewProvider())
     let photo = FakePhotoLibraryPermissionChecker()
     photo.status = status
     plugin.photoLibraryPermissionChecker = photo
     plugin.setImagePickerControllerOverrides([UIImagePickerController()])
     await confirmation("photo error") { confirmed in
-      let context = FLTImagePickerMethodCallContext { _, error in
+      let context = ImagePickerMethodCallContext { _, error in
         #expect(error?.code == code)
         confirmed()
       }
       context.includeImages = true
       context.requestFullMetadata = true
       plugin.launchUIImagePicker(
-        withSource: FLTSourceSpecification.make(with: .gallery, camera: .rear), context: context)
+        with: FLTSourceSpecification.make(with: .gallery, camera: .rear), context: context)
     }
   }
 }

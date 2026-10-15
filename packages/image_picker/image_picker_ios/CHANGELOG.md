@@ -6,6 +6,7 @@
 * Migrates the PHPicker save operation from Objective-C to Swift.
 * Migrates image, metadata, and photo-asset utilities from Objective-C to Swift.
 * Switches Pigeon to Swift.
+* Converts the iOS example app and UI tests to Swift.
 
 ## 0.8.13+12
 
